@@ -19,23 +19,23 @@ func clamp(val float64, lower, upper int) (ret int) {
 }
 
 type borders struct {
-	top float64
+	top    float64
 	bottom float64
 }
 
 func (bs *borders) Reset(r *rand.Rand, leds int) {
 	desiredStdDev := float64(leds) * 0.07
-	bs.top = r.NormFloat64()*desiredStdDev + float64(leds) * 0.80
-	bs.bottom = r.NormFloat64()*desiredStdDev + float64(leds) * 0.40
+	bs.top = r.NormFloat64()*desiredStdDev + float64(leds)*0.80
+	bs.bottom = r.NormFloat64()*desiredStdDev + float64(leds)*0.40
 }
 
-func smooth(s lampbase.Stripe){
+func smooth(s lampbase.Stripe) {
 	o := make(lampbase.Stripe, len(s))
 	copy(o, s)
 	for i := 1; i < len(s)-2; i++ {
-		s[i].R = uint8((float64(o[i-1].R)+2.0*float64(o[i].R)+float64(o[i+1].R))/4.0)
-		s[i].G = uint8((float64(o[i-1].G)+2.0*float64(o[i].G)+float64(o[i+1].G))/4.0)
-		s[i].B = uint8((float64(o[i-1].B)+2.0*float64(o[i].B)+float64(o[i+1].B))/4.0)
+		s[i].R = uint8((float64(o[i-1].R) + 2.0*float64(o[i].R) + float64(o[i+1].R)) / 4.0)
+		s[i].G = uint8((float64(o[i-1].G) + 2.0*float64(o[i].G) + float64(o[i+1].G)) / 4.0)
+		s[i].B = uint8((float64(o[i-1].B) + 2.0*float64(o[i].B) + float64(o[i+1].B)) / 4.0)
 	}
 }
 
@@ -58,8 +58,8 @@ func main() {
 
 	for true {
 		for strpn, s := range lamp.Stripes {
-			borders[strpn].top += r.NormFloat64()*desiredStdDev
-			borders[strpn].bottom += r.NormFloat64()*desiredStdDev
+			borders[strpn].top += r.NormFloat64() * desiredStdDev
+			borders[strpn].bottom += r.NormFloat64() * desiredStdDev
 			bottom := clamp(borders[strpn].bottom, 0, len(s)-1)
 			top := clamp(borders[strpn].top, 0, len(s)-1)
 
@@ -72,10 +72,12 @@ func main() {
 			for i := top; i < len(s); i++ {
 				s[i].R, s[i].G, s[i].B = 0, 0, 0
 			}
-			smooth(s)
+			for i := 0; i < 100; i++ {
+				smooth(s)
+			}
 		}
 		lamp.Update()
-		kill := r.Intn(300)
+		kill := r.Intn(30)
 		if kill < len(borders) {
 			borders[kill].Reset(r, len(lamp.Stripes[kill]))
 		}
