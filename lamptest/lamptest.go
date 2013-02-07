@@ -40,11 +40,11 @@ func smooth(s lampbase.Stripe) {
 }
 
 func main() {
-	addr, err := net.ResolveUDPAddr("udp4", "192.168.0.177:8888")
+	addr, err := net.ResolveUDPAddr("udp4", "192.168.178.178:8888")
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
-	lamp := lampbase.NewLamp(4, 16, addr)
+	lamp := lampbase.NewLamp(4, 26, addr)
 
 	r := rand.New(rand.NewSource(42))
 	lamp.Update()
