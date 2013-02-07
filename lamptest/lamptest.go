@@ -44,7 +44,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
-	lamp := lampbase.NewLamp(4, 26, addr)
+	lamp := lampbase.NewLamp(4, 16, addr)
 
 	r := rand.New(rand.NewSource(42))
 	lamp.Update()
