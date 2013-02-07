@@ -24,9 +24,9 @@ type borders struct {
 }
 
 func (bs *borders) Reset(r *rand.Rand, leds int) {
-	desiredStdDev := float64(leds) * 0.07
+	desiredStdDev := float64(leds) * 0.04
 	bs.top = r.NormFloat64()*desiredStdDev + float64(leds)*0.80
-	bs.bottom = r.NormFloat64()*desiredStdDev + float64(leds)*0.40
+	bs.bottom = r.NormFloat64()*desiredStdDev + float64(leds)*0.30
 }
 
 func smooth(s lampbase.Stripe) {
@@ -72,15 +72,15 @@ func main() {
 			for i := top; i < len(s); i++ {
 				s[i].R, s[i].G, s[i].B = 0, 0, 0
 			}
-			for i := 0; i < 100; i++ {
+			for i := 0; i < 5; i++ {
 				smooth(s)
 			}
 		}
 		lamp.Update()
-		kill := r.Intn(30)
+		kill := r.Intn(300)
 		if kill < len(borders) {
 			borders[kill].Reset(r, len(lamp.Stripes[kill]))
 		}
-		time.Sleep(30 * time.Millisecond)
+		time.Sleep(25 * time.Millisecond)
 	}
 }
