@@ -1,15 +1,37 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"lamp/effects"
 	"lamp/lampbase"
 	"net"
+	"strings"
 	"time"
 )
 
+var (
+	effectName  string
+	lampAddress string
+	reg         map[string]effects.Effect
+)
+
+func init() {
+	reg = make(map[string]effects.Effect, 10)
+	reg["fire"] = effects.NewFireEffect()
+	reg["wheel"] = &effects.Wheel{}
+
+	effectList := make([]string, 0, 10)
+	for k, _ := range reg {
+		effectList = append(effectList, k)
+	}
+	flag.StringVar(&effectName, "effect", "fire", "Effect (available: "+strings.Join(effectList, ", ")+")")
+	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
+}
+
 func main() {
-	addr, err := net.ResolveUDPAddr("udp4", "192.168.178.178:8888")
+	flag.Parse()
+	addr, err := net.ResolveUDPAddr("udp4", lampAddress)
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
@@ -17,7 +39,7 @@ func main() {
 
 	lamp.Update()
 
-	var eff effects.Effect = effects.NewFireEffect()
+	var eff effects.Effect = reg[effectName]
 
 	for true {
 		eff.ColorizeLamp(lamp)
