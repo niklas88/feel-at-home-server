@@ -11,9 +11,11 @@ import (
 )
 
 var (
-	effectName  string
-	lampAddress string
-	reg         map[string]effects.Effect
+	effectName        string
+	lampAddress       string
+	lampStripes       int
+	lampLedsPerStripe int
+	reg               map[string]effects.Effect
 )
 
 func init() {
@@ -27,6 +29,8 @@ func init() {
 	}
 	flag.StringVar(&effectName, "effect", "fire", "Effect (available: "+strings.Join(effectList, ", ")+")")
 	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
+	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
+	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
 }
 
 func main() {
@@ -35,7 +39,7 @@ func main() {
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
-	lamp := lampbase.NewLamp(4, 26, addr)
+	lamp := lampbase.NewLamp(lampStripes, lampLedsPerStripe, addr)
 
 	lamp.Update()
 
