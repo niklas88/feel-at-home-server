@@ -23,6 +23,11 @@ func NewLamp(numStripes, ledsPerStripe int, addr *net.UDPAddr) *Lamp {
 	return &Lamp{stripes, addr, nil, make([]uint8, ledsPerStripe*numStripes*3+1)}
 }
 
+func (l *Lamp) Close() {
+	l.conn.Close()
+	l.conn = nil
+}
+
 func (l *Lamp) Dial() (err error) {
 	conn := l.conn
 
@@ -57,7 +62,7 @@ func (l *Lamp) Update() (err error) {
 		}
 	}
 
-	written, err :=  l.conn.Write(l.buf)
+	written, err := l.conn.Write(l.buf)
 	if err == nil && written != len(l.buf) {
 		err = errors.New("Couldn't write buf in single write/packet")
 	}

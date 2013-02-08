@@ -42,6 +42,7 @@ func main() {
 		fmt.Println("Couldn't resolve", err)
 	}
 	lamp := lampbase.NewLamp(lampStripes, lampLedsPerStripe, addr)
+	defer lamp.Close()
 
 	lamp.Update()
 
