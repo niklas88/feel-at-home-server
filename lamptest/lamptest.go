@@ -15,6 +15,7 @@ var (
 	lampAddress       string
 	lampStripes       int
 	lampLedsPerStripe int
+	lampDelay         int
 	reg               map[string]effects.Effect
 )
 
@@ -31,6 +32,7 @@ func init() {
 	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
 	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
 	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
+	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
 }
 
 func main() {
@@ -48,6 +50,6 @@ func main() {
 	for true {
 		eff.ColorizeLamp(lamp)
 		lamp.Update()
-		time.Sleep(25 * time.Millisecond)
+		time.Sleep(time.Duration(lampDelay) * time.Millisecond)
 	}
 }
