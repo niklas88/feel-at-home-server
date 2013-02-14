@@ -5,11 +5,11 @@ import (
 )
 
 type Effect interface {
-	ColorizeLamp(lamp *lampbase.Lamp)
+	ColorizeLamp(lamp lampbase.StripeLamp)
 }
 
-type EffectFunc func(lamp *lampbase.Lamp)
+type EffectFunc func(lamp lampbase.StripeLamp)
 
-func (f EffectFunc) ColorizeLamp(lamp *lampbase.Lamp) {
+func (f EffectFunc) ColorizeLamp(lamp lampbase.StripeLamp) {
 	f(lamp)
 }

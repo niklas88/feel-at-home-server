@@ -22,17 +22,18 @@ type borderpair struct {
 
 type FireEffect struct {
 	r       *rand.Rand
-	lamp    *lampbase.Lamp
+	lamp    lampbase.StripeLamp
 	borders []borderpair
 	stdDev  float64
 }
 
-func (f *FireEffect) ColorizeLamp(lamp *lampbase.Lamp) {
+func (f *FireEffect) ColorizeLamp(lamp lampbase.StripeLamp) {
 	if f.lamp != lamp {
 		f.setLamp(lamp)
 	}
 
-	for strpn, s := range lamp.Stripes {
+	stripes := lamp.Stripes()
+	for strpn, s := range stripes {
 		f.borders[strpn].top += f.r.NormFloat64() * f.stdDev
 		f.borders[strpn].bottom += f.r.NormFloat64() * f.stdDev
 		bottom := clamp(f.borders[strpn].bottom, 0, len(s)-1)
@@ -53,7 +54,7 @@ func (f *FireEffect) ColorizeLamp(lamp *lampbase.Lamp) {
 	}
 	kill := f.r.Intn(300)
 	if kill < len(f.borders) {
-		f.borders[kill].Reset(f.r, len(lamp.Stripes[kill]))
+		f.borders[kill].Reset(f.r, len(stripes[kill]))
 	}
 }
 
@@ -73,14 +74,16 @@ func smooth(s lampbase.Stripe) {
 	}
 }
 
-func (f *FireEffect) setLamp(l *lampbase.Lamp) {
+func (f *FireEffect) setLamp(l lampbase.StripeLamp) {
 	f.lamp = l
-	numStripes := len(l.Stripes)
+	stripes := l.Stripes()
+	numStripes := len(stripes)
 	f.borders = make([]borderpair, numStripes)
-	f.stdDev = float64(len(l.Stripes[0])) * 0.04
+	f.stdDev = float64(len(stripes[0])) * 0.04
 
 	for i, b := range f.borders {
-		b.Reset(f.r, len(l.Stripes[i]))
+		b.Reset(f.r, len(stripes[i]))
+
 	}
 }
 

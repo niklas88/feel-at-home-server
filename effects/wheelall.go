@@ -21,8 +21,8 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 
 }
 
-func (w *Wheel) ColorizeLamp(lamp *lampbase.Lamp) {
-	for _, s := range lamp.Stripes {
+func (w *Wheel) ColorizeLamp(lamp lampbase.StripeLamp) {
+	for _, s := range lamp.Stripes() {
 		for i := range s {
 			s[i].R, s[i].G, s[i].B = wheelColor(uint8(w.wheelPos))
 		}

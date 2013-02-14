@@ -41,16 +41,22 @@ func main() {
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
-	lamp := lampbase.NewLamp(lampStripes, lampLedsPerStripe, addr)
+	lamp := lampbase.NewUdpStripeLamp(lampStripes, lampLedsPerStripe)
+	if err = lamp.Dial(nil, addr); err != nil {
+		fmt.Println(err)
+		return
+	}
 	defer lamp.Close()
 
-	lamp.Update()
+	lamp.UpdateAll()
 
 	var eff effects.Effect = reg[effectName]
-
 	for true {
 		eff.ColorizeLamp(lamp)
-		lamp.Update()
+		if err = lamp.UpdateAll(); err != nil {
+			fmt.Println(err)
+			return
+		}
 		time.Sleep(time.Duration(lampDelay) * time.Millisecond)
 	}
 }
