@@ -3,8 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"image/color"
 	"lamp/effects"
 	"lamp/lampbase"
+	"launchpad.net/tomb"
 	"net"
 	"strings"
 	"time"
@@ -16,13 +18,13 @@ var (
 	lampStripes       int
 	lampLedsPerStripe int
 	lampDelay         int
-	reg               map[string]effects.Effect
+	reg               map[string]effects.StripeLampEffectFactory
 )
 
 func init() {
-	reg = make(map[string]effects.Effect, 10)
-	reg["fire"] = effects.NewFireEffect()
-	reg["wheel"] = &effects.Wheel{}
+	reg = make(map[string]effects.StripeLampEffectFactory, 10)
+	reg["fire"] = effects.StripeLampEffectFactory(effects.NewFireEffect)
+	//reg["wheel"] = &effects.Wheel{}
 
 	effectList := make([]string, 0, 10)
 	for k, _ := range reg {
@@ -50,13 +52,21 @@ func main() {
 
 	lamp.UpdateAll()
 
-	var eff effects.Effect = reg[effectName]
-	for true {
-		eff.ColorizeLamp(lamp)
-		if err = lamp.UpdateAll(); err != nil {
-			fmt.Println(err)
-			return
-		}
-		time.Sleep(time.Duration(lampDelay) * time.Millisecond)
-	}
+	var eff effects.Effect = reg[effectName](lamp)
+	config := eff.Config().(*effects.FireConfig)
+	config.BottomColor = color.RGBA{255, 0, 0, 0}
+	config.MidColor = color.RGBA{0, 0, 255, 0}
+	config.TopColor = color.RGBA{0, 0, 0, 0}
+	t := eff.Tomb()
+	c := eff.ConfigChan()
+	go eff.Apply()
+	time.Sleep(3 * time.Second)
+	c <- config
+	go func(t *tomb.Tomb) {
+		time.Sleep(30 * time.Second)
+		fmt.Println("Killing")
+		t.Kill(nil)
+	}(t)
+
+	t.Wait()
 }
