@@ -69,4 +69,5 @@ func main() {
 	}(t)
 
 	t.Wait()
+	lamp.Power(false)
 }

@@ -43,8 +43,8 @@ type FireEffect struct {
 
 func (f *FireEffect) Config() interface{} {
 	f.m.RLock()
+	defer f.m.RUnlock()
 	conf := f.config
-	f.m.RUnlock()
 	return &conf
 }
 
@@ -58,6 +58,7 @@ func (f *FireEffect) Tomb() *tomb.Tomb {
 
 func (f *FireEffect) Apply() {
 	defer f.t.Done()
+	tick := time.NewTicker(30 * time.Millisecond)
 	for {
 		select {
 		case <-f.t.Dying():
@@ -73,10 +74,9 @@ func (f *FireEffect) Apply() {
 			f.m.Lock()
 			f.config = *newConf
 			f.m.Unlock()
-		default:
+		case <-tick.C:
+			f.colorizeLamp()
 		}
-		f.colorizeLamp()
-		time.Sleep(30 * time.Millisecond)
 	}
 
 }
