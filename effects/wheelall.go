@@ -1,13 +1,15 @@
-// +build ignore
 package effects
 
 import (
+	"image/color"
 	"lamp/lampbase"
+	"time"
 )
 
-type Wheel struct {
+type WheelAll struct {
 	wheelPos uint32
 	forward  bool
+	lamp     lampbase.ColorLamp
 }
 
 func wheelColor(w uint8) (uint8, uint8, uint8) {
@@ -22,12 +24,16 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 
 }
 
-func (w *Wheel) ColorizeLamp(lamp lampbase.StripeLamp) {
-	for _, s := range lamp.Stripes() {
-		for i := range s {
-			s[i].R, s[i].G, s[i].B = wheelColor(uint8(w.wheelPos))
-		}
+func NewWheelAllEffect(l lampbase.ColorLamp, conf interface{}) Effect {
+	if conf != nil {
+		panic("Expected nil")
 	}
+	return &WheelAll{0, false, l}
+}
+
+func (w *WheelAll) Apply() (time.Duration, error) {
+	var c color.RGBA
+	c.R, c.G, c.B = wheelColor(uint8(w.wheelPos))
 	if w.wheelPos <= 0 || w.wheelPos >= 255 {
 		w.forward = !w.forward
 	}
@@ -37,4 +43,6 @@ func (w *Wheel) ColorizeLamp(lamp lampbase.StripeLamp) {
 	} else {
 		w.wheelPos--
 	}
+	err := w.lamp.SetColor(&c)
+	return 30 * time.Millisecond, err
 }

@@ -3,9 +3,7 @@ package effects
 import (
 	"image/color"
 	"lamp/lampbase"
-	"launchpad.net/tomb"
 	"math/rand"
-	"sync"
 	"time"
 )
 
@@ -35,50 +33,13 @@ type FireEffect struct {
 	lamp    lampbase.StripeLamp
 	borders []borderpair
 	stdDev  float64
-	config  FireConfig
-	ch      chan interface{}
-	t       tomb.Tomb
-	m       sync.RWMutex
+	config  *FireConfig
 }
 
-func (f *FireEffect) Config() interface{} {
-	f.m.RLock()
-	defer f.m.RUnlock()
-	conf := f.config
-	return &conf
-}
-
-func (f *FireEffect) ConfigChan() chan interface{} {
-	return f.ch
-}
-
-func (f *FireEffect) Tomb() *tomb.Tomb {
-	return &f.t
-}
-
-func (f *FireEffect) Apply() {
-	defer f.t.Done()
-	tick := time.NewTicker(30 * time.Millisecond)
-	for {
-		select {
-		case <-f.t.Dying():
-			close(f.ch)
-			return
-		case confRecv := <-f.ch:
-			newConf, ok := confRecv.(*FireConfig)
-			if !ok {
-				close(f.ch)
-				f.t.Killf("Received config that wasn't *FireConfig", confRecv)
-				return
-			}
-			f.m.Lock()
-			f.config = *newConf
-			f.m.Unlock()
-		case <-tick.C:
-			f.colorizeLamp()
-		}
-	}
-
+func (f *FireEffect) Apply() (time.Duration, error) {
+	f.colorizeLamp()
+	f.lamp.UpdateAll()
+	return 30 * time.Millisecond, nil
 }
 
 func (f *FireEffect) colorizeLamp() {
@@ -125,9 +86,8 @@ func smooth(s lampbase.Stripe) {
 	}
 }
 
-func NewFireEffect(l lampbase.StripeLamp) Effect {
-	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: nil, borders: make([]borderpair, 0), stdDev: 0.0, ch: make(chan interface{}, 1)}
-	f.lamp = l
+func NewFireEffect(l lampbase.StripeLamp, conf interface{}) Effect {
+	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: conf.(*FireConfig), borders: make([]borderpair, 0), stdDev: 0.0}
 	stripes := l.Stripes()
 	numStripes := len(stripes)
 	f.borders = make([]borderpair, numStripes)
