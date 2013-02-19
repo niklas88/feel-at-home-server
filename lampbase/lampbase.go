@@ -6,12 +6,12 @@ import (
 	"net"
 )
 
-type Powerable interface {
+type Device interface {
 	Power(on bool) error
 }
 
 type DimLamp interface {
-	Powerable
+	Device
 	SetBrightness(brightness uint8) error
 }
 
@@ -45,11 +45,18 @@ func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
 }
 
 func (l *UdpStripeLamp) Power(on bool) error {
-	// Todo make it turn back to original color
-	if !on {
-		return l.SetColor(&color.RGBA{0, 0, 0, 0})
+	l.buf[0] = 'P'
+	if on {
+		l.buf[1] = 1
+
+	} else {
+		l.buf[1] = 0
 	}
-	return nil
+	written, err := l.conn.Write(l.buf[:2])
+	if err == nil && written != 2 {
+		err = errors.New("Couldn't write udp packet in one call")
+	}
+	return err
 }
 
 func (l *UdpStripeLamp) SetBrightness(b uint8) error {
@@ -67,6 +74,14 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	written, err := l.conn.Write(l.buf[:4])
 	if err == nil && written != 4 {
 		err = errors.New("Couldn't write udp packet in one call")
+	}
+	// Change internal model
+	if err == nil {
+		for _, stripe := range l.stripes {
+			for i, _ := range stripe {
+				stripe[i] = c
+			}
+		}
 	}
 	return err
 }

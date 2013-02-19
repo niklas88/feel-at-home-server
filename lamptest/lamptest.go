@@ -21,42 +21,6 @@ var (
 	reg               map[string]*effects.EffectInfo
 )
 
-func configureEffect(info *effects.EffectInfo, lamp lampbase.Powerable) effects.Effect {
-	if info == nil {
-		return nil
-	}
-
-	var config interface{}
-	switch info.Name {
-	case "fire":
-		config = &effects.FireConfig{color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, color.RGBA{0, 0, 0, 0}}
-	default:
-		config = nil
-	}
-
-	switch fac := info.Factory.(type) {
-	case effects.PowerableEffectFactory:
-		if l, ok := lamp.(lampbase.Powerable); ok {
-			return fac(l, config)
-		}
-	case effects.DimLampEffectFactory:
-		if l, ok := lamp.(lampbase.DimLamp); ok {
-			return fac(l, config)
-		}
-	case effects.ColorLampEffectFactory:
-		if l, ok := lamp.(lampbase.ColorLamp); ok {
-			return fac(l, config)
-		}
-	case effects.StripeLampEffectFactory:
-		if l, ok := lamp.(lampbase.StripeLamp); ok {
-			return fac(l, config)
-		}
-	default:
-		panic("Unknow lamp factory type")
-	}
-	return nil
-}
-
 func init() {
 	reg = make(map[string]*effects.EffectInfo, 10)
 	reg["fire"] = &effects.EffectInfo{
@@ -94,7 +58,10 @@ func main() {
 
 	lamp.UpdateAll()
 
-	var eff effects.Effect = configureEffect(reg[effectName], lamp)
+	var eff effects.Effect = reg[effectName].CreateEffect(lamp)
+	if fire, ok := eff.(*effects.FireEffect); ok {
+		fire.Configure(&effects.FireConfig{color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, color.RGBA{0, 0, 0, 0}})
+	}
 	controller := effects.NewController()
 	go controller.Run()
 	time.Sleep(3 * time.Second)
@@ -106,5 +73,5 @@ func main() {
 	}(&controller.Tomb)
 
 	controller.Tomb.Wait()
-	lamp.Power(false)
+	fmt.Println(lamp.Power(false))
 }

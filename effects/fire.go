@@ -86,13 +86,14 @@ func smooth(s lampbase.Stripe) {
 	}
 }
 
-func NewFireEffect(l lampbase.StripeLamp, conf interface{}) Effect {
-	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: conf.(*FireConfig), borders: make([]borderpair, 0), stdDev: 0.0}
+func (f *FireEffect) Configure(conf interface{}) {
+	f.config = conf.(*FireConfig)
+}
+
+func NewFireEffect(l lampbase.StripeLamp) Effect {
 	stripes := l.Stripes()
 	numStripes := len(stripes)
-	f.borders = make([]borderpair, numStripes)
-	f.stdDev = float64(len(stripes[0])) * 0.04
-
+	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: nil, borders: make([]borderpair, numStripes), stdDev: float64(len(stripes[0])) * 0.04}
 	for i, b := range f.borders {
 		b.reset(f.r, len(stripes[i]))
 	}

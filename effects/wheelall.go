@@ -24,10 +24,7 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 
 }
 
-func NewWheelAllEffect(l lampbase.ColorLamp, conf interface{}) Effect {
-	if conf != nil {
-		panic("Expected nil")
-	}
+func NewWheelAllEffect(l lampbase.ColorLamp) Effect {
 	return &WheelAll{0, false, l}
 }
 
