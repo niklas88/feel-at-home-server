@@ -1,6 +1,7 @@
 package effects
 
 import (
+	"fmt"
 	"lamp/lampbase"
 	"time"
 )
@@ -48,4 +49,24 @@ func (e *EffectInfo) CreateEffect(lamp lampbase.Device) Effect {
 		panic("Unknow lamp factory type")
 	}
 	return nil
+}
+
+func (e *EffectInfo) Compatible(lamp lampbase.Device) bool {
+	switch fac := e.Factory.(type) {
+	case DeviceEffectFactory:
+		_, ok := lamp.(lampbase.Device)
+		return ok
+	case DimLampEffectFactory:
+		_, ok := lamp.(lampbase.DimLamp)
+		return ok
+	case ColorLampEffectFactory:
+		_, ok := lamp.(lampbase.ColorLamp)
+		return ok
+	case StripeLampEffectFactory:
+		_, ok := lamp.(lampbase.StripeLamp)
+		return ok
+	default:
+		panic("Unknow lamp factory type "+fmt.Sprint(fac))
+	}
+	return false
 }
