@@ -18,18 +18,18 @@ var (
 	lampStripes       int
 	lampLedsPerStripe int
 	lampDelay         int
-	reg               map[string]*effects.EffectInfo
+	reg               map[string]*effects.Info
 )
 
 func init() {
-	reg = make(map[string]*effects.EffectInfo, 10)
-	reg["fire"] = &effects.EffectInfo{
+	reg = make(map[string]*effects.Info, 10)
+	reg["fire"] = &effects.Info{
 		Name:          "fire",
-		ConfigFactory: func() interface{} { return &effects.FireConfig{} },
+		ConfigFactory: func() effects.Config { return &effects.FireConfig{} },
 		Factory:       effects.StripeLampEffectFactory(effects.NewFireEffect)}
-	reg["wheel"] = &effects.EffectInfo{
+	reg["wheel"] = &effects.Info{
 		Name:          "wheel",
-		ConfigFactory: func() interface{} { return nil },
+		ConfigFactory: func() effects.Config { return nil },
 		Factory:       effects.ColorLampEffectFactory(effects.NewWheelAllEffect)}
 
 	effectList := make([]string, 0, 10)

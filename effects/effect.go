@@ -10,14 +10,15 @@ type Effect interface {
 	Apply() (time.Duration, error)
 }
 
-type ConfigurerEffect interface {
-	Effect
-	Configure(conf interface{})
+type Configurer interface {
+	Configure(conf Config)
 }
 
-type EffectInfo struct {
+type Config interface{}
+
+type Info struct {
 	Name          string
-	ConfigFactory func() interface{}
+	ConfigFactory func() Config
 	Factory       interface{}
 }
 
@@ -26,7 +27,7 @@ type DimLampEffectFactory func(d lampbase.DimLamp) Effect
 type ColorLampEffectFactory func(c lampbase.ColorLamp) Effect
 type StripeLampEffectFactory func(s lampbase.StripeLamp) Effect
 
-func (e *EffectInfo) CreateEffect(lamp lampbase.Device) Effect {
+func (e *Info) CreateEffect(lamp lampbase.Device) Effect {
 
 	switch fac := e.Factory.(type) {
 	case DeviceEffectFactory:
@@ -51,7 +52,7 @@ func (e *EffectInfo) CreateEffect(lamp lampbase.Device) Effect {
 	return nil
 }
 
-func (e *EffectInfo) Compatible(lamp lampbase.Device) bool {
+func (e *Info) Compatible(lamp lampbase.Device) bool {
 	switch fac := e.Factory.(type) {
 	case DeviceEffectFactory:
 		_, ok := lamp.(lampbase.Device)
