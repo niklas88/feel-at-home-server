@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/gorilla/mux"
-	"lamp/effects"
+	"lamp/effect"
+	_ "lamp/effects/fire"
+	_ "lamp/effects/wheel"
 	"lamp/lampbase"
 	"log"
 	"net"
@@ -23,24 +25,9 @@ var (
 	lampLedsPerStripe int
 	lampDelay         int
 	deviceList        []DeviceInfo
-	reg               map[string]*effects.EffectInfo
 )
 
 func init() {
-	reg = make(map[string]*effects.EffectInfo, 10)
-	reg["fire"] = &effects.EffectInfo{
-		Name:          "fire",
-		ConfigFactory: func() interface{} { return &effects.FireConfig{} },
-		Factory:       effects.StripeLampEffectFactory(effects.NewFireEffect)}
-	reg["wheel"] = &effects.EffectInfo{
-		Name:          "wheel",
-		ConfigFactory: func() interface{} { return nil },
-		Factory:       effects.ColorLampEffectFactory(effects.NewWheelAllEffect)}
-
-	effectList := make([]string, 0, 10)
-	for k, _ := range reg {
-		effectList = append(effectList, k)
-	}
 	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
 	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
 	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
@@ -69,17 +56,11 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	id := vars["id"]
 	deviceId, _ := strconv.Atoi(id)
 	if deviceId < 0 || deviceId >= len(deviceList) {
-		w.WriteHeader(404)
+		http.NotFound(w, req)
 		return
 	}
 	device := deviceList[deviceId]
-	var effectList []EffectDescription
-	for effectName, effectInfo := range reg {
-		if effectInfo.Compatible(device.Device) {
-			effectList = append(effectList, EffectDescription{effectName, effectInfo.ConfigFactory()})
-		}
-	}
-
+	effectList := effect.DefaultRegistry.CompatibleEffects(device.Device)
 	out, err := json.Marshal(effectList)
 	if err != nil {
 		log.Println(err)

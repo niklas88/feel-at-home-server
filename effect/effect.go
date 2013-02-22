@@ -1,4 +1,4 @@
-package effects
+package effect
 
 import (
 	"fmt"
@@ -17,7 +17,11 @@ type Configurer interface {
 type Config interface{}
 
 type Info struct {
-	Name          string
+	Name        string
+	Description string
+}
+type ExtendedInfo struct {
+	Info
 	ConfigFactory func() Config
 	Factory       interface{}
 }
@@ -27,32 +31,7 @@ type DimLampEffectFactory func(d lampbase.DimLamp) Effect
 type ColorLampEffectFactory func(c lampbase.ColorLamp) Effect
 type StripeLampEffectFactory func(s lampbase.StripeLamp) Effect
 
-func (e *Info) CreateEffect(lamp lampbase.Device) Effect {
-
-	switch fac := e.Factory.(type) {
-	case DeviceEffectFactory:
-		if l, ok := lamp.(lampbase.Device); ok {
-			return fac(l)
-		}
-	case DimLampEffectFactory:
-		if l, ok := lamp.(lampbase.DimLamp); ok {
-			return fac(l)
-		}
-	case ColorLampEffectFactory:
-		if l, ok := lamp.(lampbase.ColorLamp); ok {
-			return fac(l)
-		}
-	case StripeLampEffectFactory:
-		if l, ok := lamp.(lampbase.StripeLamp); ok {
-			return fac(l)
-		}
-	default:
-		panic("Unknow lamp factory type")
-	}
-	return nil
-}
-
-func (e *Info) Compatible(lamp lampbase.Device) bool {
+func (e *ExtendedInfo) Compatible(lamp lampbase.Device) bool {
 	switch fac := e.Factory.(type) {
 	case DeviceEffectFactory:
 		_, ok := lamp.(lampbase.Device)
@@ -67,7 +46,7 @@ func (e *Info) Compatible(lamp lampbase.Device) bool {
 		_, ok := lamp.(lampbase.StripeLamp)
 		return ok
 	default:
-		panic("Unknow lamp factory type "+fmt.Sprint(fac))
+		panic("Unknow lamp factory type " + fmt.Sprint(fac))
 	}
 	return false
 }

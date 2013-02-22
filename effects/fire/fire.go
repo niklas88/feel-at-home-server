@@ -1,7 +1,8 @@
-package effects
+package fire
 
 import (
 	"image/color"
+	"lamp/effect"
 	"lamp/lampbase"
 	"math/rand"
 	"time"
@@ -34,6 +35,15 @@ type FireEffect struct {
 	borders []borderpair
 	stdDev  float64
 	config  *FireConfig
+}
+
+func init() {
+	effect.DefaultRegistry.Register(&effect.ExtendedInfo{
+		Info: effect.Info{
+			Name:        "Fire",
+			Description: "Fire Effect, turns your lamp into a fire place"},
+		ConfigFactory: func() effect.Config { return &FireConfig{} },
+		Factory:       effect.StripeLampEffectFactory(NewFireEffect)})
 }
 
 func (f *FireEffect) Apply() (time.Duration, error) {
@@ -90,7 +100,7 @@ func (f *FireEffect) Configure(conf interface{}) {
 	f.config = conf.(*FireConfig)
 }
 
-func NewFireEffect(l lampbase.StripeLamp) Effect {
+func NewFireEffect(l lampbase.StripeLamp) effect.Effect {
 	stripes := l.Stripes()
 	numStripes := len(stripes)
 	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: nil, borders: make([]borderpair, numStripes), stdDev: float64(len(stripes[0])) * 0.04}

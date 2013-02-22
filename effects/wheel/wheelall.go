@@ -1,7 +1,8 @@
-package effects
+package effect
 
 import (
 	"image/color"
+	"lamp/effect"
 	"lamp/lampbase"
 	"time"
 )
@@ -24,7 +25,16 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 
 }
 
-func NewWheelAllEffect(l lampbase.ColorLamp) Effect {
+func init() {
+	effect.DefaultRegistry.Register(&effect.ExtendedInfo{
+		Info: effect.Info{
+			Name:        "Wheel",
+			Description: "A color wheel effect for color lamps"},
+		ConfigFactory: func() effect.Config { return nil },
+		Factory:       effect.ColorLampEffectFactory(NewWheelAllEffect)})
+}
+
+func NewWheelAllEffect(l lampbase.ColorLamp) effect.Effect {
 	return &WheelAll{0, false, l}
 }
 
