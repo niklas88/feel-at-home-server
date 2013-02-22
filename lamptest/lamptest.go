@@ -52,7 +52,9 @@ func main() {
 	controller := effect.NewController()
 	go controller.Run()
 	time.Sleep(3 * time.Second)
-	controller.EffectChan <- eff
+	if err != nil {
+		controller.EffectChan <- eff
+	}
 	go func(t *tomb.Tomb) {
 		time.Sleep(30 * time.Second)
 		fmt.Println("Killing")
