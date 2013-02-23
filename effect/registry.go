@@ -7,8 +7,8 @@ import (
 )
 
 type Registry struct {
+	sync.RWMutex
 	r map[string]*ExtendedInfo
-	m sync.RWMutex
 }
 
 var DefaultRegistry Registry
@@ -18,8 +18,8 @@ func init() {
 }
 
 func (r *Registry) Register(info *ExtendedInfo) error {
-	r.m.Lock()
-	defer r.m.Unlock()
+	r.Lock()
+	defer r.Unlock()
 	if _, ok := r.r[info.Name]; ok {
 		return errors.New("Tried adding two effects under Name " + info.Name)
 	}
@@ -56,8 +56,8 @@ func (r *Registry) CreateEffect(info *Info, lamp lampbase.Device) Effect {
 }
 
 func (r *Registry) CreateConfig(info *Info) Config {
-	r.m.RLock()
-	defer r.m.RUnlock()
+	r.RLock()
+	defer r.RUnlock()
 	e, ok := r.r[info.Name]
 	if !ok {
 		return nil
@@ -67,8 +67,8 @@ func (r *Registry) CreateConfig(info *Info) Config {
 
 func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
 	compatibles := make([]Info, 0, 10)
-	r.m.RLock()
-	defer r.m.RUnlock()
+	r.RLock()
+	defer r.RUnlock()
 	for _, v := range r.r {
 		if v.Compatible(lamp) {
 			compatibles = append(compatibles, Info{v.Name, v.Description})
