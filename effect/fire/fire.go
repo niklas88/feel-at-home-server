@@ -1,6 +1,7 @@
 package fire
 
 import (
+	"github.com/pwaller/go-hexcolor"
 	"image/color"
 	"lamp/effect"
 	"lamp/lampbase"
@@ -9,6 +10,12 @@ import (
 )
 
 type FireConfig struct {
+	BottomColor hexcolor.Hex
+	MidColor    hexcolor.Hex
+	TopColor    hexcolor.Hex
+}
+
+type config struct {
 	BottomColor color.RGBA
 	MidColor    color.RGBA
 	TopColor    color.RGBA
@@ -34,7 +41,7 @@ type FireEffect struct {
 	lamp    lampbase.StripeLamp
 	borders []borderpair
 	stdDev  float64
-	config  *FireConfig
+	config  config
 }
 
 func init() {
@@ -99,13 +106,17 @@ func smooth(s lampbase.Stripe) {
 }
 
 func (f *FireEffect) Configure(conf effect.Config) {
-	f.config = conf.(*FireConfig)
+	fireConf := conf.(*FireConfig)
+	m := color.RGBAModel
+	f.config.BottomColor = m.Convert(fireConf.BottomColor).(color.RGBA)
+	f.config.TopColor = m.Convert(fireConf.TopColor).(color.RGBA)
+	f.config.MidColor = m.Convert(fireConf.MidColor).(color.RGBA)
 }
 
 func NewFireEffect(l lampbase.StripeLamp) effect.Effect {
 	stripes := l.Stripes()
 	numStripes := len(stripes)
-	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: nil, borders: make([]borderpair, numStripes), stdDev: float64(len(stripes[0])) * 0.04}
+	f := &FireEffect{r: rand.New(rand.NewSource(42)), lamp: l, config: config{}, borders: make([]borderpair, numStripes), stdDev: float64(len(stripes[0])) * 0.04}
 	for i, b := range f.borders {
 		b.reset(f.r, len(stripes[i]))
 	}
