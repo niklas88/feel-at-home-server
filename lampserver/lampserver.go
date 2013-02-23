@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/gorilla/mux"
+	"lamp/devicemaster"
 	"lamp/effect"
 	_ "lamp/effect/fire"
 	_ "lamp/effect/wheel"
@@ -11,20 +12,14 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"strconv"
 )
-
-type DeviceInfo struct {
-	Name   string
-	Device lampbase.Device `json:"-"`
-}
 
 var (
 	lampAddress       string
 	lampStripes       int
 	lampLedsPerStripe int
 	lampDelay         int
-	deviceList        []DeviceInfo
+	dm                *devicemaster.DeviceMaster
 )
 
 func init() {
@@ -37,7 +32,7 @@ func init() {
 func DeviceListHandler(w http.ResponseWriter, req *http.Request) {
 	log.Println("Requesting device list")
 	w.Header().Set("Content-Type", "application/json")
-	out, err := json.Marshal(deviceList)
+	out, err := json.Marshal(dm.DeviceList())
 	if err != nil {
 		log.Println(err)
 		return
@@ -53,17 +48,18 @@ type EffectDescription struct {
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(req)
-	id := vars["id"]
-	deviceId, _ := strconv.Atoi(id)
-	if deviceId < 0 || deviceId >= len(deviceList) {
+	deviceId := vars["id"]
+	device, ok := dm.Device(deviceId)
+	if !ok {
+		log.Println("Did not find", device)
 		http.NotFound(w, req)
 		return
 	}
-	device := deviceList[deviceId]
 	effectList := effect.DefaultRegistry.CompatibleEffects(device.Device)
 	out, err := json.Marshal(effectList)
 	if err != nil {
 		log.Println(err)
+		http.Error(w, "darn fuck it", 302)
 		return
 	}
 	w.Write(out)
@@ -80,13 +76,12 @@ func main() {
 		log.Println(err)
 		return
 	}
-	defer lamp.Close()
 
-	deviceList = append(deviceList, DeviceInfo{"Big Lamp", lamp})
-
+	dm = devicemaster.New(effect.DefaultRegistry)
+	dm.AddDevice("Big Lamp", "big", lamp)
 	r := mux.NewRouter()
 	r.HandleFunc("/devices", DeviceListHandler)
-	r.HandleFunc("/devices/{id:[0-9]+}/effects", EffectListHandler)
+	r.HandleFunc("/devices/{id}/effects", EffectListHandler)
 
 	if err = http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal("ListenAndServe: ", err)
