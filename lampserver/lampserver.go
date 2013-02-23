@@ -40,9 +40,85 @@ func DeviceListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(out)
 }
 
-type EffectDescription struct {
+func DeviceHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(req)
+	deviceId := vars["id"]
+	device, ok := dm.Device(deviceId)
+	if !ok {
+		log.Println("Did not find", device)
+		http.NotFound(w, req)
+		return
+	}
+	out, err := json.Marshal(device)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "darn fuck it", 302)
+		return
+	}
+	w.Write(out)
+}
+
+func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(req)
+	deviceId := vars["id"]
+	device, ok := dm.Device(deviceId)
+	if !ok {
+		log.Println("Did not find", device)
+		http.NotFound(w, req)
+		return
+	}
+	out, err := json.Marshal(device.CurrentEffect)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "darn fuck it", 302)
+		return
+	}
+	w.Write(out)
+}
+
+type EffectPut struct {
 	Name   string
-	Config interface{}
+	Config json.RawMessage
+}
+
+func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(req)
+	deviceId := vars["id"]
+	device, ok := dm.Device(deviceId)
+	if !ok {
+		log.Println("Did not find", device)
+		http.NotFound(w, req)
+		return
+	}
+	put := &EffectPut{}
+	decoder := json.NewDecoder(req.Body)
+	err := decoder.Decode(put)
+	if err != nil {
+		log.Println(err)
+		// TODO correct error code for malformed input
+		http.Error(w, "darn fuck it", 302)
+		return
+	}
+	effectInfo, ok := effect.DefaultRegistry.EffectInfo(put.Name)
+	if !ok {
+		log.Println("Did not find", device)
+		http.NotFound(w, req)
+		return
+	}
+	err = json.Unmarshal(put.Config, &effectInfo.Config)
+	if err != nil {
+		log.Println(err)
+		// TODO correct error code for malformed input
+		http.Error(w, "darn fuck it", 302)
+		return
+	}
+	out, _ := json.Marshal(&effectInfo)
+	log.Println("Read:", string(out))
+	dm.SetEffect(deviceId, &effectInfo)
+	w.Write([]byte{})
 }
 
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
@@ -81,7 +157,10 @@ func main() {
 	dm.AddDevice("Big Lamp", "big", lamp)
 	r := mux.NewRouter()
 	r.HandleFunc("/devices", DeviceListHandler)
-	r.HandleFunc("/devices/{id}/effects", EffectListHandler)
+	r.HandleFunc("/devices/{id}", DeviceHandler).Methods("GET")
+	r.HandleFunc("/devices/{id}/effect", EffectGetHandler).Methods("GET")
+	r.HandleFunc("/devices/{id}/effect", EffectPutHandler).Methods("PUT")
+	r.HandleFunc("/devices/{id}/available", EffectListHandler)
 
 	if err = http.ListenAndServe(":8080", r); err != nil {
 		log.Fatal("ListenAndServe: ", err)

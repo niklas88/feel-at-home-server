@@ -98,7 +98,7 @@ func smooth(s lampbase.Stripe) {
 	}
 }
 
-func (f *FireEffect) Configure(conf interface{}) {
+func (f *FireEffect) Configure(conf effect.Config) {
 	f.config = conf.(*FireConfig)
 }
 

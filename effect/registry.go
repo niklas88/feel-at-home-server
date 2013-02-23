@@ -93,3 +93,13 @@ func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
 	}
 	return compatibles
 }
+
+func (r *Registry) EffectInfo(name string) (Info, bool) {
+	r.RLock()
+	defer r.RUnlock()
+	v, ok := r.r[name]
+	if !ok {
+		return Info{}, false
+	}
+	return v.InfoFactory(), true
+}
