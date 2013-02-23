@@ -26,12 +26,14 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 }
 
 func init() {
-	effect.DefaultRegistry.Register(&effect.ExtendedInfo{
-		Info: effect.Info{
-			Name:        "Wheel",
-			Description: "A color wheel effect for color lamps"},
-		ConfigFactory: func() effect.Config { return nil },
-		Factory:       effect.ColorLampEffectFactory(NewWheelAllEffect)})
+	effect.DefaultRegistry.Register(&effect.Registration{
+		InfoFactory: func() effect.Info {
+			return effect.Info{
+				Name:        "Wheel",
+				Description: "A color wheel effect for color lamps",
+				Config:      nil}
+		},
+		Factory: effect.ColorLampEffectFactory(NewWheelAllEffect)})
 }
 
 func NewWheelAllEffect(l lampbase.ColorLamp) effect.Effect {
