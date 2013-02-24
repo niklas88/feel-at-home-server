@@ -13,8 +13,8 @@ type Registry struct {
 }
 
 type Registration struct {
-	InfoFactory func() Info
-	Factory     interface{}
+	Info    Info
+	Factory interface{}
 }
 
 func (e *Registration) Compatible(lamp lampbase.Device) bool {
@@ -44,9 +44,9 @@ func init() {
 }
 
 func (r *Registry) Register(reg *Registration) error {
-	info := reg.InfoFactory()
 	r.Lock()
 	defer r.Unlock()
+	info := reg.Info
 	if _, ok := r.r[info.Name]; ok {
 		return errors.New("Tried adding two effects under Name " + info.Name)
 	}
@@ -54,32 +54,38 @@ func (r *Registry) Register(reg *Registration) error {
 	return nil
 }
 
-func (r *Registry) CreateEffect(info *Info, lamp lampbase.Device) Effect {
-	e, ok := r.r[info.Name]
+func (r *Registry) CreateEffect(name string, lamp lampbase.Device) (Effect, *Info) {
+	r.RLock()
+	defer r.RUnlock()
+	e, ok := r.r[name]
 	if !ok {
-		return nil
+		return nil, nil
 	}
+	var (
+		eff  Effect
+		info Info
+	)
 	switch fac := e.Factory.(type) {
 	case DeviceEffectFactory:
 		if l, ok := lamp.(lampbase.Device); ok {
-			return fac(l)
+			eff, info = fac(l), e.Info
 		}
 	case DimLampEffectFactory:
 		if l, ok := lamp.(lampbase.DimLamp); ok {
-			return fac(l)
+			eff, info = fac(l), e.Info
 		}
 	case ColorLampEffectFactory:
 		if l, ok := lamp.(lampbase.ColorLamp); ok {
-			return fac(l)
+			eff, info = fac(l), e.Info
 		}
 	case StripeLampEffectFactory:
 		if l, ok := lamp.(lampbase.StripeLamp); ok {
-			return fac(l)
+			eff, info = fac(l), e.Info
 		}
 	default:
 		panic("Unknow lamp factory type")
 	}
-	return nil
+	return eff, &info
 }
 
 func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
@@ -88,18 +94,30 @@ func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
 	defer r.RUnlock()
 	for _, v := range r.r {
 		if v.Compatible(lamp) {
-			compatibles = append(compatibles, v.InfoFactory())
+			compatibles = append(compatibles, v.Info)
 		}
 	}
 	return compatibles
 }
 
-func (r *Registry) EffectInfo(name string) (Info, bool) {
+func (r *Registry) Info(name string) (*Info, bool) {
 	r.RLock()
 	defer r.RUnlock()
 	v, ok := r.r[name]
 	if !ok {
-		return Info{}, false
+		return nil, false
 	}
-	return v.InfoFactory(), true
+	info := v.Info
+	return &info, true
+}
+
+func (r *Registry) Config(name string) (Config, bool) {
+	r.RLock()
+	defer r.RUnlock()
+	v, ok := r.r[name]
+	if !ok {
+		return nil, false
+	}
+	info := v.Info
+	return info.Config, true
 }

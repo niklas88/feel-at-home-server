@@ -102,22 +102,20 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "darn fuck it", 302)
 		return
 	}
-	effectInfo, ok := effect.DefaultRegistry.EffectInfo(put.Name)
+	config, ok := effect.DefaultRegistry.Config(put.Name)
 	if !ok {
 		log.Println("Did not find", device)
 		http.NotFound(w, req)
 		return
 	}
-	err = json.Unmarshal(put.Config, &effectInfo.Config)
+	err = json.Unmarshal(put.Config, &config)
 	if err != nil {
 		log.Println(err)
 		// TODO correct error code for malformed input
 		http.Error(w, "darn fuck it", 302)
 		return
 	}
-	out, _ := json.Marshal(&effectInfo)
-	log.Println("Read:", string(out))
-	dm.SetEffect(deviceId, &effectInfo)
+	dm.SetEffect(deviceId, put.Name, config)
 	w.Write([]byte{})
 }
 

@@ -46,12 +46,10 @@ type FireEffect struct {
 
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
-		InfoFactory: func() effect.Info {
-			return effect.Info{
-				Name:        "Fire",
-				Description: "Fire Effect, turns your lamp into a fire place",
-				Config:      &FireConfig{}}
-		},
+		Info: effect.Info{
+			Name:        "Fire",
+			Description: "Fire Effect, turns your lamp into a fire place",
+			Config:      &FireConfig{}},
 		Factory: effect.StripeLampEffectFactory(NewFireEffect)})
 }
 

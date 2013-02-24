@@ -3,13 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"image/color"
 	"lamp/effect"
 	"lamp/effect/fire"
 	_ "lamp/effect/wheel"
 	"lamp/lampbase"
 	"launchpad.net/tomb"
 	"net"
+	"os"
 	"time"
 )
 
@@ -44,17 +44,17 @@ func main() {
 
 	lamp.UpdateAll()
 
-	effectInfo := effect.Info{Name: effectName}
-	eff := effect.DefaultRegistry.CreateEffect(&effectInfo, lamp)
+	eff, _ := effect.DefaultRegistry.CreateEffect(effectName, lamp)
+	if eff == nil {
+		os.Exit(2)
+	}
 	if fireEffect, ok := eff.(*fire.FireEffect); ok {
-		fireEffect.Configure(&fire.FireConfig{color.RGBA{255, 0, 0, 0}, color.RGBA{0, 0, 255, 0}, color.RGBA{0, 0, 0, 0}})
+		fireEffect.Configure(&fire.FireConfig{"#ff0000", "#00ff00", "#0000ff"})
 	}
 	controller := effect.NewController()
 	go controller.Run()
 	time.Sleep(3 * time.Second)
-	if err != nil {
-		controller.EffectChan <- eff
-	}
+	controller.EffectChan <- eff
 	go func(t *tomb.Tomb) {
 		time.Sleep(30 * time.Second)
 		fmt.Println("Killing")
