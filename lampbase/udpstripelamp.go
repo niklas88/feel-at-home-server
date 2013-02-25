@@ -1,9 +1,9 @@
 package lampbase
 
 import (
-	"net"
 	"errors"
 	"image/color"
+	"net"
 )
 
 type UdpStripeLamp struct {
@@ -16,7 +16,7 @@ type UdpStripeLamp struct {
 
 func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
 	stripes := make([]Stripe, numStripes)
-	for i, _ := range stripes {
+	for i := range stripes {
 		stripes[i] = make(Stripe, ledsPerStripe)
 	}
 	return &UdpStripeLamp{stripes, nil, nil, nil, make([]uint8, ledsPerStripe*numStripes*3+1)}
@@ -56,7 +56,7 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	// Change internal model
 	if err == nil {
 		for _, stripe := range l.stripes {
-			for i, _ := range stripe {
+			for i := range stripe {
 				stripe[i] = c
 			}
 		}
