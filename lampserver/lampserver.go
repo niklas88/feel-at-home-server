@@ -19,10 +19,14 @@ var (
 	lampStripes       int
 	lampLedsPerStripe int
 	lampDelay         int
+	listenAddr        string
+	staticServeDir    string
 	dm                *devicemaster.DeviceMaster
 )
 
 func init() {
+	flag.StringVar(&listenAddr, "listen", ":8080", "Address the lampserver listens on")
+	flag.StringVar(&staticServeDir, "serve", "./static", "Directory to serve static content from")
 	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
 	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
 	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
@@ -159,8 +163,11 @@ func main() {
 	r.HandleFunc("/devices/{id}/effect", EffectGetHandler).Methods("GET")
 	r.HandleFunc("/devices/{id}/effect", EffectPutHandler).Methods("PUT")
 	r.HandleFunc("/devices/{id}/available", EffectListHandler)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir(staticServeDir))))
+	// Redirect toplevel requests to the static folder so browsers find index.html
+	r.Path("/").Handler(http.RedirectHandler("/static/", 302))
 
-	if err = http.ListenAndServe(":8080", r); err != nil {
+	if err = http.ListenAndServe(listenAddr, r); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }
