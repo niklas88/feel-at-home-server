@@ -8,6 +8,7 @@ import (
 	"lamp/effect"
 	_ "lamp/effect/fire"
 	_ "lamp/effect/wheel"
+	_ "lamp/effect/wheel2"
 	"lamp/lampbase"
 	"log"
 	"net"
