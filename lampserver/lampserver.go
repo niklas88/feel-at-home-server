@@ -113,7 +113,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	err = json.Unmarshal(put.Config, &config)
+	err = json.Unmarshal(put.Config, config)
 	if err != nil {
 		log.Println(err)
 		// TODO correct error code for malformed input

@@ -13,8 +13,9 @@ type Registry struct {
 }
 
 type Registration struct {
-	Info    Info
-	Factory interface{}
+	Info          Info
+	Factory       interface{}
+	ConfigFactory func() Config
 }
 
 func (e *Registration) Compatible(lamp lampbase.Device) bool {
@@ -50,6 +51,8 @@ func (r *Registry) Register(reg *Registration) error {
 	if _, ok := r.r[info.Name]; ok {
 		return errors.New("Tried adding two effects under Name " + info.Name)
 	}
+	// Populate Config with default
+	reg.Info.Config = reg.ConfigFactory()
 	r.r[info.Name] = reg
 	return nil
 }
@@ -108,6 +111,7 @@ func (r *Registry) Info(name string) (*Info, bool) {
 		return nil, false
 	}
 	info := v.Info
+	info.Config = v.ConfigFactory()
 	return &info, true
 }
 
@@ -118,6 +122,5 @@ func (r *Registry) Config(name string) (Config, bool) {
 	if !ok {
 		return nil, false
 	}
-	info := v.Info
-	return info.Config, true
+	return v.ConfigFactory(), true
 }

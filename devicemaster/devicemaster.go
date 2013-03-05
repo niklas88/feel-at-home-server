@@ -17,7 +17,7 @@ type DeviceInfo struct {
 	Name          string
 	Id            string
 	CurrentEffect *effect.Info
-	Device        lampbase.Device
+	Device        lampbase.Device `json:"-"`
 	controller    *effect.Controller
 }
 
@@ -64,6 +64,7 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 		log.Println("Configuring")
 		c.Configure(config)
 	}
+	info.Config = config
 	dev.CurrentEffect = info
 	dev.controller.EffectChan <- eff
 	return nil

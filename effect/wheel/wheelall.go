@@ -29,9 +29,9 @@ func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
 			Name:        "Wheel",
-			Description: "A color wheel effect for color lamps",
-			Config:      nil},
-		Factory: effect.ColorLampEffectFactory(NewWheelAllEffect)})
+			Description: "A color wheel effect for color lamps"},
+		ConfigFactory: func() effect.Config { return nil },
+		Factory:       effect.ColorLampEffectFactory(NewWheelAllEffect)})
 }
 
 func NewWheelAllEffect(l lampbase.ColorLamp) effect.Effect {

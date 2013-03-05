@@ -15,9 +15,9 @@ func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
 			Name:        "Wheel2",
-			Description: "Color wheel effect that sets single leds",
-			Config:      nil},
-		Factory: effect.StripeLampEffectFactory(NewWheel2Effect)})
+			Description: "Color wheel effect that sets single leds"},
+		ConfigFactory: func() effect.Config { return nil },
+		Factory:       effect.StripeLampEffectFactory(NewWheel2Effect)})
 }
 
 func (f *WheelSingle) Apply() (time.Duration, error) {
