@@ -16,7 +16,7 @@ type DeviceInfoShort struct {
 type DeviceInfo struct {
 	Name          string
 	Id            string
-	CurrentEffect *effect.Info
+	CurrentEffect *effect.Info `json:"-"`
 	Device        lampbase.Device `json:"-"`
 	controller    *effect.Controller
 }
