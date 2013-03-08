@@ -113,12 +113,14 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	err = json.Unmarshal(put.Config, config)
-	if err != nil {
-		log.Println(err)
-		// TODO correct error code for malformed input
-		http.Error(w, "darn fuck it", 302)
-		return
+	if config != nil {
+		err = json.Unmarshal(put.Config, config)
+		if err != nil {
+			log.Println(err)
+			// TODO correct error code for malformed input
+			http.Error(w, "darn fuck it config broken", 302)
+			return
+		}
 	}
 	dm.SetEffect(deviceId, put.Name, config)
 	w.Write([]byte{})
