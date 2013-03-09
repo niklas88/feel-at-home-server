@@ -58,7 +58,7 @@ func DeviceHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 302)
+		http.Error(w, "darn fuck it", 400)
 		return
 	}
 	w.Write(out)
@@ -77,7 +77,7 @@ func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device.CurrentEffect)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 302)
+		http.Error(w, "darn fuck it", 400)
 		return
 	}
 	w.Write(out)
@@ -103,8 +103,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(put)
 	if err != nil {
 		log.Println(err)
-		// TODO correct error code for malformed input
-		http.Error(w, "darn fuck it", 302)
+		http.Error(w, "darn fuck it", 400)
 		return
 	}
 	config, ok := effect.DefaultRegistry.Config(put.Name)
@@ -117,8 +116,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		err = json.Unmarshal(put.Config, config)
 		if err != nil {
 			log.Println(err)
-			// TODO correct error code for malformed input
-			http.Error(w, "darn fuck it config broken", 302)
+			http.Error(w, "darn fuck it config broken", 400)
 			return
 		}
 	}
@@ -140,7 +138,7 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(effectList)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 302)
+		http.Error(w, "darn fuck it", 400)
 		return
 	}
 	w.Write(out)
