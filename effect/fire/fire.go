@@ -13,12 +13,14 @@ type FireConfig struct {
 	BottomColor hexcolor.Hex
 	MidColor    hexcolor.Hex
 	TopColor    hexcolor.Hex
+	Delay       string
 }
 
 type config struct {
 	BottomColor color.RGBA
 	MidColor    color.RGBA
 	TopColor    color.RGBA
+	Delay       time.Duration
 }
 
 func clamp(val float64, lower, upper int) (ret int) {
@@ -49,14 +51,14 @@ func init() {
 		Info: effect.Info{
 			Name:        "Fire",
 			Description: "Fire Effect, turns your lamp into a fire place"},
-		ConfigFactory: func() effect.Config { return &FireConfig{} },
+		ConfigFactory: func() effect.Config { return &FireConfig{"#ff0000", "#ffff00", "#000000", "40 ms"} },
 		Factory:       effect.StripeLampEffectFactory(NewFireEffect)})
 }
 
 func (f *FireEffect) Apply() (time.Duration, error) {
 	f.colorizeLamp()
 	f.lamp.UpdateAll()
-	return 30 * time.Millisecond, nil
+	return f.config.Delay , nil
 }
 
 func (f *FireEffect) colorizeLamp() {
@@ -106,9 +108,15 @@ func smooth(s lampbase.Stripe) {
 func (f *FireEffect) Configure(conf effect.Config) {
 	fireConf := conf.(*FireConfig)
 	m := color.RGBAModel
+	// TODO handle wrong formats
+	var err error
 	f.config.BottomColor = m.Convert(fireConf.BottomColor).(color.RGBA)
 	f.config.TopColor = m.Convert(fireConf.TopColor).(color.RGBA)
 	f.config.MidColor = m.Convert(fireConf.MidColor).(color.RGBA)
+	f.config.Delay, err = time.ParseDuration(fireConf.Delay)
+	if err != nil {
+		f.config.Delay = 40 * time.Millisecond
+	}
 }
 
 func NewFireEffect(l lampbase.StripeLamp) effect.Effect {
