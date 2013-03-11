@@ -1,4 +1,4 @@
-package effect
+package wheel
 
 import (
 	"image/color"
