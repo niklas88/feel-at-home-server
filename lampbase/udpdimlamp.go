@@ -34,8 +34,13 @@ func (l *UdpDimLamp) Power(on bool) error {
 }
 
 func (l *UdpDimLamp) SetBrightness(b uint8) error {
-	color := color.RGBA{b, b, b, 0}
-	return l.SetColor(&color)
+	l.buf[0] = 'P'
+	l.buf[1] = b
+	written, err := l.conn.Write(l.buf[:2])
+	if err == nil && written != 2 {
+		err = errors.New("Couldn't write udp packet in one call")
+	}
+	return err
 }
 
 func (l *UdpDimLamp) Close() error {
