@@ -7,15 +7,14 @@ import (
 )
 
 type UdpStripeLamp struct {
-	raddr   *net.UDPAddr
-	laddr   *net.UDPAddr
-	conn    *net.UDPConn
-	buf     []uint8
+	raddr *net.UDPAddr
+	laddr *net.UDPAddr
+	conn  *net.UDPConn
+	buf   []uint8
 }
 
 func NewUdpDimLamp(numStripes, ledsPerStripe int) *UdpDimLamp {
-	
-	
+
 	return &UdpDimLamp{nil, nil, nil, make([]uint8, 4)}
 }
 
@@ -39,7 +38,6 @@ func (l *UdpDimLamp) SetBrightness(b uint8) error {
 	return l.SetColor(&color)
 }
 
-
 func (l *UdpDimLamp) Close() error {
 	err := l.conn.Close()
 	l.conn = nil
@@ -55,5 +53,3 @@ func (l *UdpDimLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
 	}
 	return
 }
-
-

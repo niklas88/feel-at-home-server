@@ -7,10 +7,10 @@ import (
 )
 
 type UdpAnalogStripeLamp struct {
-	raddr   *net.UDPAddr
-	laddr   *net.UDPAddr
-	conn    *net.UDPConn
-	buf     []uint8
+	raddr *net.UDPAddr
+	laddr *net.UDPAddr
+	conn  *net.UDPConn
+	buf   []uint8
 }
 
 func NewUdpAnalogStripeLamp() *UdpAnalogStripeLamp {
@@ -59,7 +59,6 @@ func (l *UdpAnalogStripeLamp) SetColor(col color.Color) error {
 	return err
 }
 
-
 func (l *UdpStripeLamp) Close() error {
 	err := l.conn.Close()
 	l.conn = nil
@@ -75,5 +74,3 @@ func (l *UdpStripeLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
 	}
 	return
 }
-
-

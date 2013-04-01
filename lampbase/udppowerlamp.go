@@ -7,14 +7,14 @@ import (
 )
 
 type UdpPowerLamp struct {
-	raddr   *net.UDPAddr
-	laddr   *net.UDPAddr
-	conn    *net.UDPConn
-	buf     []uint8
+	raddr *net.UDPAddr
+	laddr *net.UDPAddr
+	conn  *net.UDPConn
+	buf   []uint8
 }
 
 func NewPowerLamp() *UdpPowerLamp {
-	return &UdpPowerLamp{nil, nil, nil, make([]uint8, 1)}
+	return &UdpPowerLamp{nil, nil, nil, make([]uint8, 2)}
 }
 
 func (l *UdpPowerLamp) Power(on bool) error {
@@ -32,8 +32,6 @@ func (l *UdpPowerLamp) Power(on bool) error {
 	return err
 }
 
-
-
 func (l *UdpPowerLamp) Close() error {
 	err := l.conn.Close()
 	l.conn = nil
@@ -49,5 +47,3 @@ func (l *UdpPowerLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
 	}
 	return
 }
-
-
