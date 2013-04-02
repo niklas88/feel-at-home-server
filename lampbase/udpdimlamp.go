@@ -13,7 +13,7 @@ type UdpStripeLamp struct {
 	buf   []uint8
 }
 
-func NewUdpDimLamp(numStripes, ledsPerStripe int) *UdpDimLamp {
+func NewUdpDimLamp() *UdpDimLamp {
 
 	return &UdpDimLamp{nil, nil, nil, make([]uint8, 4)}
 }
