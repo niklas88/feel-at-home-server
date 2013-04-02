@@ -6,18 +6,18 @@ import (
 	"net"
 )
 
-type UdpAnalogStripeLamp struct {
+type UdpAnalogColorLamp struct {
 	raddr *net.UDPAddr
 	laddr *net.UDPAddr
 	conn  *net.UDPConn
 	buf   []uint8
 }
 
-func NewUdpAnalogStripeLamp() *UdpAnalogStripeLamp {
-	return &UdpAnalogStripeLamp{nil, nil, nil, make([]uint8, 4)}
+func NewUdpAnalogColorLamp() *UdpAnalogColorLamp {
+	return &UdpAnalogColorLamp{nil, nil, nil, make([]uint8, 4)}
 }
 
-func (l *UdpAnalogStripeLamp) Power(on bool) error {
+func (l *UdpAnalogColorLamp) Power(on bool) error {
 	l.buf[0] = 'P'
 	if on {
 		l.buf[1] = 1
@@ -32,12 +32,12 @@ func (l *UdpAnalogStripeLamp) Power(on bool) error {
 	return err
 }
 
-func (l *UdpAnalogStripeLamp) SetBrightness(b uint8) error {
+func (l *UdpAnalogColorLamp) SetBrightness(b uint8) error {
 	color := color.RGBA{b, b, b, 0}
 	return l.SetColor(&color)
 }
 
-func (l *UdpAnalogStripeLamp) SetColor(col color.Color) error {
+func (l *UdpAnalogColorLamp) SetColor(col color.Color) error {
 	if l.conn == nil {
 		return errors.New("Not Dialed")
 	}
@@ -59,13 +59,13 @@ func (l *UdpAnalogStripeLamp) SetColor(col color.Color) error {
 	return err
 }
 
-func (l *UdpStripeLamp) Close() error {
+func (l *UdpAnalogColorLamp) Close() error {
 	err := l.conn.Close()
 	l.conn = nil
 	return err
 }
 
-func (l *UdpStripeLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
+func (l *UdpAnalogColorLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
 	l.raddr, l.laddr = raddr, laddr
 
 	conn, err := net.DialUDP("udp4", laddr, raddr)
