@@ -48,14 +48,6 @@ func (l *UdpAnalogColorLamp) SetColor(col color.Color) error {
 	if err == nil && written != 4 {
 		err = errors.New("Couldn't write udp packet in one call")
 	}
-	// Change internal model
-	if err == nil {
-		for _, stripe := range l.stripes {
-			for i := range stripe {
-				stripe[i] = c
-			}
-		}
-	}
 	return err
 }
 
