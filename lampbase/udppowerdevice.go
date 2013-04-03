@@ -2,7 +2,6 @@ package lampbase
 
 import (
 	"errors"
-	"image/color"
 	"net"
 )
 
@@ -13,7 +12,7 @@ type UdpPowerDevice struct {
 	buf   []uint8
 }
 
-func NewPowerDevice() *UdpPowerDevice {
+func NewUdpPowerDevice() *UdpPowerDevice {
 	return &UdpPowerDevice{nil, nil, nil, make([]uint8, 2)}
 }
 
