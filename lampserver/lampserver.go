@@ -15,25 +15,26 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 )
 
 var (
-	lampAddress       string
-	lampStripes       int
-	lampLedsPerStripe int
-	lampDelay         int
-	listenAddr        string
-	staticServeDir    string
-	dm                *devicemaster.DeviceMaster
+	lampDelay      int
+	listenAddr     string
+	staticServeDir string
+	configFileName string
+	serverConfig   ServerConfig
+	dm             *devicemaster.DeviceMaster
 )
 
 func init() {
-	flag.StringVar(&listenAddr, "listen", ":8080", "Address the lampserver listens on")
+	/*flag.StringVar(&listenAddr, "listen", ":8080", "Address the lampserver listens on")
 	flag.StringVar(&staticServeDir, "serve", "./static", "Directory to serve static content from")
 	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
 	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
-	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
+	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")*/
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
+	flag.StringVar(&configFileName, "configfilename", "config.json", "Filepath of the configfile")
 }
 
 func DeviceListHandler(w http.ResponseWriter, req *http.Request) {
@@ -88,6 +89,11 @@ func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
 type EffectPut struct {
 	Name   string
 	Config json.RawMessage
+}
+
+type ServerConfig struct {
+	ListenAddress string
+	Devices       []map[string]interface{}
 }
 
 func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
@@ -146,20 +152,99 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(out)
 }
 
+func deviceFromConfig(configDevice map[string]interface{}) (string, string, lampbase.Device) {
+	lampAddress, okLampAddress := configDevice["lampAddress"]
+	id, okID := configDevice["id"]
+	name, okName := configDevice["name"]
+	t, okTyp := configDevice["typ"]
+	if okLampAddress && okID && okName && okTyp {
+		lampAddress, okLampAddress := lampAddress.(string)
+		id, okID := id.(string)
+		name, okName := name.(string)
+		t, okTyp := t.(string)
+
+		if okLampAddress && okID && okName && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
+			addr, err := net.ResolveUDPAddr("udp4", lampAddress)
+			if err != nil {
+				log.Println("bam5")
+				log.Fatal("Couldn't resolve", err)
+				return "", "", nil
+			}
+			var device lampbase.Device
+			switch t {
+			case "udpstripelamp":
+				lampStripesInterface, okLampStripes := configDevice["lampStripes"]
+				lampLedsPerStripeInterface, okLedsPerStripe := configDevice["lampLedsPerStripe"]
+				if okLampStripes && okLedsPerStripe {
+					lampStripes, okLampStripes := lampStripesInterface.(float64)
+					lampLedsPerStripe, okLedsPerStripe := lampLedsPerStripeInterface.(float64)
+					if okLampStripes && okLedsPerStripe {
+						udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
+						if err = udpStripeLamp.Dial(nil, addr); err != nil {
+							log.Println(err)
+							return "", "", nil
+						}
+						device = udpStripeLamp
+					} else {
+						return "", "", nil
+					}
+				} else {
+					return "", "", nil
+				}
+
+				break
+			case "udpanalogcolorlamp":
+				udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
+				if err = udpAnalogColorLamp.Dial(nil, addr); err != nil {
+					log.Println(err)
+					return "", "", nil
+				}
+				device = udpAnalogColorLamp
+				break
+			case "udpdimlamp":
+				udpDimLamp := lampbase.NewUdpDimLamp()
+				if err = udpDimLamp.Dial(nil, addr); err != nil {
+					log.Println(err)
+					return "", "", nil
+				}
+				device = udpDimLamp
+				break
+			case "udppowerdevice":
+				udpPowerDevice := lampbase.NewUdpPowerDevice()
+				if err = udpPowerDevice.Dial(nil, addr); err != nil {
+					log.Println(err)
+					return "", "", nil
+				}
+				device = udpPowerDevice
+				break
+			}
+			return name, id, device
+		}
+	}
+	return "", "", nil
+
+}
+
 func main() {
 	flag.Parse()
-	addr, err := net.ResolveUDPAddr("udp4", lampAddress)
+
+	file, err := os.Open(configFileName)
 	if err != nil {
-		log.Println("Couldn't resolve", err)
+		log.Fatal(err)
 	}
-	lamp := lampbase.NewUdpStripeLamp(lampStripes, lampLedsPerStripe)
-	if err = lamp.Dial(nil, addr); err != nil {
-		log.Println(err)
-		return
+	decoder := json.NewDecoder(file)
+	err = decoder.Decode(&serverConfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dm = devicemaster.New(effect.DefaultRegistry)
+	for _, value := range serverConfig.Devices {
+		name, id, lamp := deviceFromConfig(value)
+		if name != "" && id != "" && lamp != nil {
+			dm.AddDevice(name, id, lamp)
+		}
 	}
 
-	dm = devicemaster.New(effect.DefaultRegistry)
-	dm.AddDevice("Big Lamp", "big", lamp)
 	r := mux.NewRouter()
 	r.HandleFunc("/devices", DeviceListHandler)
 	r.HandleFunc("/devices/{id}", DeviceHandler).Methods("GET")
@@ -170,7 +255,7 @@ func main() {
 	// Redirect toplevel requests to the static folder so browsers find index.html
 	r.Path("/").Handler(http.RedirectHandler("/static/", 302))
 
-	if err = http.ListenAndServe(listenAddr, r); err != nil {
+	if err = http.ListenAndServe(serverConfig.ListenAddress, r); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }

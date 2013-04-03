@@ -1,0 +1,14 @@
+{
+	"listenaddress" : ":8080",
+	"devices":[
+
+		{
+			"typ": "udpstripelamp",
+			"lampAddress": "192.168.178.178:8888",
+			"id": "big",
+			"name": "Big Lamp",
+			"lampStripes" : 4,
+		       	"lampLedsPerStripe" : 26
+		}
+	]
+}
