@@ -2,11 +2,10 @@ package lampbase
 
 import (
 	"errors"
-	"image/color"
 	"net"
 )
 
-type UdpStripeLamp struct {
+type UdpDimLamp struct {
 	raddr *net.UDPAddr
 	laddr *net.UDPAddr
 	conn  *net.UDPConn
