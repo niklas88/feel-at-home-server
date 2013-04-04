@@ -1,0 +1,31 @@
+{
+	"listenaddress" : ":8080",
+	"devices":[
+		{
+			"typ": "udpstripelamp",
+			"lampAddress": "192.168.0.177:8888",
+			"id": "big",
+			"name": "Big Lamp",
+			"lampStripes" : 4,
+		       	"lampLedsPerStripe" : 16
+		},
+		{
+			"typ": "udpanalogcolorlamp",
+			"lampAddress": "192.168.0.84:8080",
+			"id": "ceiling",
+			"name": "Ceiling Lamp"
+		},
+		{
+			"typ": "udpdimlamp",
+			"lampAddress": "192.168.0.84:8181",
+			"id": "pc",
+			"name": "PC Lamp"
+		},
+		{
+			"typ": "udpdimlamp",
+			"lampAddress": "192.168.0.84:8282",
+			"id": "bedside",
+			"name": "Bedside Lamp"
+		}
+	]
+}
