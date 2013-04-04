@@ -6,6 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"lamp/devicemaster"
 	"lamp/effect"
+	_ "lamp/effect/brightness"
 	_ "lamp/effect/fire"
 	_ "lamp/effect/power"
 	_ "lamp/effect/static"
