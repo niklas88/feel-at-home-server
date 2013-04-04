@@ -33,7 +33,7 @@ func (l *UdpDimLamp) Power(on bool) error {
 }
 
 func (l *UdpDimLamp) SetBrightness(b uint8) error {
-	l.buf[0] = 'P'
+	l.buf[0] = 'C'
 	l.buf[1] = b
 	written, err := l.conn.Write(l.buf[:2])
 	if err == nil && written != 2 {
