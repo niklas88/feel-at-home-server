@@ -14,7 +14,7 @@ type UdpDimLamp struct {
 
 func NewUdpDimLamp() *UdpDimLamp {
 
-	return &UdpDimLamp{nil, nil, nil, make([]uint8, 4)}
+	return &UdpDimLamp{nil, nil, nil, make([]uint8, 2)}
 }
 
 func (l *UdpDimLamp) Power(on bool) error {
