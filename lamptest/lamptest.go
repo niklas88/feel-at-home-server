@@ -1,84 +1,66 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"lamp/effect"
+	"lamp/effect/fire"
+	_ "lamp/effect/wheel"
 	"lamp/lampbase"
-	"math/rand"
+	"launchpad.net/tomb"
 	"net"
+	"os"
 	"time"
 )
 
-func clamp(val float64, lower, upper int) (ret int) {
-	ret = int(val)
-	if ret > upper {
-		ret = upper
-	} else if ret < lower {
-		ret = lower
-	}
-	return
-}
+var (
+	effectName        string
+	lampAddress       string
+	lampStripes       int
+	lampLedsPerStripe int
+	lampDelay         int
+)
 
-type borders struct {
-	top float64
-	bottom float64
-}
-
-func (bs *borders) Reset(r *rand.Rand, leds int) {
-	desiredStdDev := float64(leds) * 0.07
-	bs.top = r.NormFloat64()*desiredStdDev + float64(leds) * 0.80
-	bs.bottom = r.NormFloat64()*desiredStdDev + float64(leds) * 0.40
-}
-
-func smooth(s lampbase.Stripe){
-	o := make(lampbase.Stripe, len(s))
-	copy(o, s)
-	for i := 1; i < len(s)-2; i++ {
-		s[i].R = uint8((float64(o[i-1].R)+2.0*float64(o[i].R)+float64(o[i+1].R))/4.0)
-		s[i].G = uint8((float64(o[i-1].G)+2.0*float64(o[i].G)+float64(o[i+1].G))/4.0)
-		s[i].B = uint8((float64(o[i-1].B)+2.0*float64(o[i].B)+float64(o[i+1].B))/4.0)
-	}
+func init() {
+	flag.StringVar(&effectName, "effect", "fire", "Effect")
+	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
+	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
+	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")
+	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
 }
 
 func main() {
-	addr, err := net.ResolveUDPAddr("udp4", "192.168.0.177:8888")
+	flag.Parse()
+	addr, err := net.ResolveUDPAddr("udp4", lampAddress)
 	if err != nil {
 		fmt.Println("Couldn't resolve", err)
 	}
-	lamp := lampbase.NewLamp(4, 16, addr)
-
-	r := rand.New(rand.NewSource(42))
-	lamp.Update()
-	borders := make([]borders, len(lamp.Stripes))
-
-	desiredStdDev := float64(len(lamp.Stripes[0])) * 0.04
-
-	for i, _ := range borders {
-		borders[i].Reset(r, len(lamp.Stripes[i]))
+	lamp := lampbase.NewUdpStripeLamp(lampStripes, lampLedsPerStripe)
+	if err = lamp.Dial(nil, addr); err != nil {
+		fmt.Println(err)
+		return
 	}
+	defer lamp.Close()
 
-	for true {
-		for strpn, s := range lamp.Stripes {
-			borders[strpn].top += r.NormFloat64()*desiredStdDev
-			borders[strpn].bottom += r.NormFloat64()*desiredStdDev
-			bottom := clamp(borders[strpn].bottom, 0, len(s)-1)
-			top := clamp(borders[strpn].top, 0, len(s)-1)
+	lamp.UpdateAll()
 
-			for i := 0; i < bottom; i++ {
-				s[i].R, s[i].G, s[i].B = 217, 93, 0
-			}
-			for i := bottom; i < top; i++ {
-				s[i].R, s[i].G, s[i].B = 255, 0, 0
-			}
-			for i := top; i < len(s); i++ {
-				s[i].R, s[i].G, s[i].B = 0, 0, 0
-			}
-			smooth(s)
-		}
-		lamp.Update()
-		kill := r.Intn(300)
-		if kill < len(borders) {
-			borders[kill].Reset(r, len(lamp.Stripes[kill]))
-		}
-		time.Sleep(30 * time.Millisecond)
+	eff, _ := effect.DefaultRegistry.CreateEffect(effectName, lamp)
+	if eff == nil {
+		os.Exit(2)
 	}
+	if fireEffect, ok := eff.(*fire.FireEffect); ok {
+		fireEffect.Configure(&fire.FireConfig{"#ff0000", "#00ff00", "#0000ff"})
+	}
+	controller := effect.NewController()
+	go controller.Run()
+	time.Sleep(3 * time.Second)
+	controller.EffectChan <- eff
+	go func(t *tomb.Tomb) {
+		time.Sleep(30 * time.Second)
+		fmt.Println("Killing")
+		t.Kill(nil)
+	}(&controller.Tomb)
+
+	controller.Tomb.Wait()
+	fmt.Println(lamp.Power(false))
 }
