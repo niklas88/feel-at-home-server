@@ -67,6 +67,6 @@ func (f *WheelStripe) colorizeLamp() {
 			s[i].R, s[i].G, s[i].B = r, g, b
 		}
 	}
-	f.wheelPos++
+	f.wheelPos--
 	f.lamp.UpdateAll()
 }
