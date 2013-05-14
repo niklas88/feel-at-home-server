@@ -1,14 +1,20 @@
 package wheel2
 
 import (
+	"log"
 	"lamp/effect"
 	"lamp/lampbase"
 	"time"
 )
 
-type WheelSingle struct {
+type WheelConfig struct {
+	Delay string
+}
+
+type WheelStripe struct {
 	wheelPos uint32
 	lamp     lampbase.StripeLamp
+	delay    time.Duration
 }
 
 func init() {
@@ -16,14 +22,14 @@ func init() {
 		Info: effect.Info{
 			Name:        "Wheel2",
 			Description: "Color wheel effect that sets single leds"},
-		ConfigFactory: func() effect.Config { return nil },
+		ConfigFactory: func() effect.Config { return &WheelConfig{"30ms"} },
 		Factory:       effect.StripeLampEffectFactory(NewWheel2Effect)})
 }
 
-func (f *WheelSingle) Apply() (time.Duration, error) {
+func (f *WheelStripe) Apply() (time.Duration, error) {
 	f.colorizeLamp()
 	f.lamp.UpdateAll()
-	return 60 * time.Millisecond, nil
+	return f.delay, nil
 }
 
 func wheelColor(w uint8) (uint8, uint8, uint8) {
@@ -39,10 +45,21 @@ func wheelColor(w uint8) (uint8, uint8, uint8) {
 }
 
 func NewWheel2Effect(l lampbase.StripeLamp) effect.Effect {
-	return &WheelSingle{0, l}
+	return &WheelStripe{0, l, 30 * time.Millisecond}
 }
 
-func (f *WheelSingle) colorizeLamp() {
+func (f *WheelStripe) Configure(conf effect.Config) {
+	wheelConf := conf.(*WheelConfig)
+	var err error
+
+	f.delay, err = time.ParseDuration(wheelConf.Delay)
+	if err != nil {
+		log.Println(err)
+		f.delay = 30 * time.Millisecond
+	}
+}
+
+func (f *WheelStripe) colorizeLamp() {
 	stripes := f.lamp.Stripes()
 	for _, s := range stripes {
 		for i := 0; i < len(s); i++ {
@@ -50,6 +67,6 @@ func (f *WheelSingle) colorizeLamp() {
 			s[i].R, s[i].G, s[i].B = r, g, b
 		}
 	}
-	f.wheelPos++
+	f.wheelPos--
 	f.lamp.UpdateAll()
 }
