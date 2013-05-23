@@ -29,11 +29,6 @@ var (
 )
 
 func init() {
-	/*flag.StringVar(&listenAddr, "listen", ":8080", "Address the lampserver listens on")
-	flag.StringVar(&staticServeDir, "serve", "./static", "Directory to serve static content from")
-	flag.StringVar(&lampAddress, "lamp", "192.168.178.178:8888", "Address of the lamp")
-	flag.IntVar(&lampStripes, "stripes", 4, "Number of stripes the lamp has")
-	flag.IntVar(&lampLedsPerStripe, "leds", 26, "Number of LEDs per stripe")*/
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
 	flag.StringVar(&configFileName, "configfilename", "config.json", "Filepath of the configfile")
 }
