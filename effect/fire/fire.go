@@ -51,7 +51,7 @@ func init() {
 		Info: effect.Info{
 			Name:        "Fire",
 			Description: "Fire Effect, turns your lamp into a fire place"},
-		ConfigFactory: func() effect.Config { return &FireConfig{"#ff0000", "#ffff00", "#000000", "40 ms"} },
+		ConfigFactory: func() effect.Config { return &FireConfig{"#ff0000", "#ffff00", "#000000", "40ms"} },
 		Factory:       effect.StripeLampEffectFactory(NewFireEffect)})
 }
 

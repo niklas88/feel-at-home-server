@@ -4,13 +4,19 @@ import (
 	"image/color"
 	"lamp/effect"
 	"lamp/lampbase"
+	"log"
 	"time"
 )
+
+type WheelConfig struct {
+	Delay string
+}
 
 type WheelAll struct {
 	wheelPos uint32
 	forward  bool
 	lamp     lampbase.ColorLamp
+	delay    time.Duration
 }
 
 func wheelColor(w uint8) (uint8, uint8, uint8) {
@@ -30,12 +36,23 @@ func init() {
 		Info: effect.Info{
 			Name:        "Wheel",
 			Description: "A color wheel effect for color lamps"},
-		ConfigFactory: func() effect.Config { return nil },
+		ConfigFactory: func() effect.Config { return &WheelConfig{"30ms"} },
 		Factory:       effect.ColorLampEffectFactory(NewWheelAllEffect)})
 }
 
 func NewWheelAllEffect(l lampbase.ColorLamp) effect.Effect {
-	return &WheelAll{0, false, l}
+	return &WheelAll{0, false, l, 30 * time.Millisecond}
+}
+
+func (f *WheelAll) Configure(conf effect.Config) {
+	wheelConf := conf.(*WheelConfig)
+	var err error
+
+	f.delay, err = time.ParseDuration(wheelConf.Delay)
+	if err != nil {
+		log.Println(err)
+		f.delay = 30 * time.Millisecond
+	}
 }
 
 func (w *WheelAll) Apply() (time.Duration, error) {
@@ -51,5 +68,5 @@ func (w *WheelAll) Apply() (time.Duration, error) {
 		w.wheelPos--
 	}
 	err := w.lamp.SetColor(&c)
-	return 30 * time.Millisecond, err
+	return w.delay, err
 }
