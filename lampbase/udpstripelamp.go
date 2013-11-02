@@ -3,6 +3,7 @@ package lampbase
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"image/color"
 	"net"
 	"time"
@@ -39,18 +40,21 @@ func (l *UdpStripeLamp) sendReliable(buf []uint8) error {
 			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
 			for !success {
 				read, err = l.conn.Read(ackBuf[:])
-				if err != nil {
-					if err.(*net.OpError).Timeout() {
-						err = errors.New("No ack received")
-					}
+				//fmt.Printf("Received \"%q\" length %d\n", ackBuf, read)
+				if err != nil && err.(*net.OpError).Timeout() {
+					err = fmt.Errorf("no ack received %q err: %s", ackBuf, err)
 					break
 				}
 
-				if read != 4 || bytes.Equal(ackBuf[:3], []byte("ACK")) {
+				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
 					err = errors.New("Ack broken: " + string(ackBuf[:]))
+					break
 				} else {
 					// We just ignore/drop non matching ACKs they are old
-					success = ackBuf[3] == l.seqNum
+					if ackBuf[3] == l.seqNum {
+						success = true
+						err = nil
+					}
 				}
 			}
 		}
