@@ -1,9 +1,9 @@
 package wheel2
 
 import (
-	"log"
 	"lamp/effect"
 	"lamp/lampbase"
+	"log"
 	"time"
 )
 
@@ -28,8 +28,8 @@ func init() {
 
 func (f *WheelStripe) Apply() (time.Duration, error) {
 	f.colorizeLamp()
-	f.lamp.UpdateAll()
-	return f.delay, nil
+	err := f.lamp.UpdateAll()
+	return f.delay, err
 }
 
 func wheelColor(w uint8) (uint8, uint8, uint8) {
@@ -68,5 +68,4 @@ func (f *WheelStripe) colorizeLamp() {
 		}
 	}
 	f.wheelPos--
-	f.lamp.UpdateAll()
 }

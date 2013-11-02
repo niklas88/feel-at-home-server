@@ -57,8 +57,8 @@ func init() {
 
 func (f *FireEffect) Apply() (time.Duration, error) {
 	f.colorizeLamp()
-	f.lamp.UpdateAll()
-	return f.config.Delay , nil
+	err := f.lamp.UpdateAll()
+	return f.config.Delay, err
 }
 
 func (f *FireEffect) colorizeLamp() {
@@ -86,7 +86,6 @@ func (f *FireEffect) colorizeLamp() {
 	if kill < len(f.borders) {
 		f.borders[kill].reset(f.r, len(stripes[kill]))
 	}
-	f.lamp.UpdateAll()
 }
 
 func (bs *borderpair) reset(r *rand.Rand, leds int) {
