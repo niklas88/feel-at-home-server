@@ -47,7 +47,7 @@ func (l *UdpStripeLamp) sendReliable(buf []uint8) error {
 				}
 
 				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-					err = errors.New("Ack broken: " + string(ackBuf[:]))
+					err = fmt.Errorf("Ack broken: %q", ackBuf[:])
 					break
 				} else {
 					// We just ignore/drop non matching ACKs they are old
