@@ -19,18 +19,6 @@ type Sunrise struct {
 	delay   time.Duration
 }
 
-func wheelColor(w uint8) (uint8, uint8, uint8) {
-	if w < 85 {
-		return w * 3, 255 - w*3, 0
-	} else if w < 170 {
-		w -= 85
-		return 255 - w*3, 0, w * 3
-	}
-	w -= 170
-	return 0, w * 3, 255 - w*3
-
-}
-
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
@@ -56,31 +44,29 @@ func (e *Sunrise) Configure(conf effect.Config) {
 }
 
 func (e *Sunrise) Apply() (time.Duration, error) {
-	var c color.RGBA
+	var r, g, b float64
 	if e.step < 5000 {
-		c.R = uint8(204.0 * float64(e.step/5000.0))
-		c.G = 0
-		c.B = 0
+		r = 204.0 * float64(e.step) / 5000.0
 	} else if e.step < 10000 {
-		c.R = uint8(255.0 * float64((e.step-5000)/5000.0))
-		c.G = uint8(51.0 * float64((e.step-5000)/5000.0))
-		c.B = 0
+		r = 204.0 + (255.0-205.0)*float64(e.step-5000)/5000.0
+		g = 51.0 * float64(e.step-5000) / 5000.0
 	} else if e.step < 15000 {
-		c.R = uint8(255.0 * float64((e.step-10000)/5000.0))
-		c.G = uint8(255.0 * float64((e.step-10000)/5000.0))
-		c.B = 0
+		r = 255.0
+		g = 51.0 + (255.0-51.0)*float64(e.step-10000)/5000.0
+		b = 0
 	} else if e.step < 20000 {
-		c.R = uint8(255.0 * float64((e.step-15000)/5000.0))
-		c.G = uint8(255.0 * float64((e.step-15000)/5000.0))
-		c.B = uint8(255.0 * float64((e.step-15000)/5000.0))
+		r = 255.0
+		g = 255.0
+		b = 255.0 * float64(e.step-15000) / 5000.0
 	} else if e.step >= 20000 {
-		c.R = 255
-		c.G = 255
-		c.B = 255
+		r = 255.0
+		g = 255.0
+		b = 255.0
 		e.delay = -1
 	}
 	e.step++
 
-	err := e.lamp.SetColor(&c)
+	e.current.R, e.current.G, e.current.B = uint8(r), uint8(g), uint8(b)
+	err := e.lamp.SetColor(&e.current)
 	return e.delay, err
 }
