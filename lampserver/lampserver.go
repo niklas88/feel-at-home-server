@@ -10,6 +10,7 @@ import (
 	_ "lamp/effect/fire"
 	_ "lamp/effect/power"
 	_ "lamp/effect/static"
+	_ "lamp/effect/sunrise"
 	_ "lamp/effect/wheel"
 	_ "lamp/effect/wheel2"
 	"lamp/lampbase"
