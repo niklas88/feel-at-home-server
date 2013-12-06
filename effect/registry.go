@@ -35,7 +35,6 @@ func (e *Registration) Compatible(lamp lampbase.Device) bool {
 	default:
 		panic("Unknow lamp factory type " + fmt.Sprint(fac))
 	}
-	return false
 }
 
 var DefaultRegistry Registry
