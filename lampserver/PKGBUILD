@@ -1,0 +1,28 @@
+# Maintainer: Niklas Schnelle <niklas@komani.de>
+
+pkgname=lampserver
+pkgver=0.1
+pkgrel=1
+pkgdesc="Server for lamps"
+arch=('x86_64' 'i686' 'armv6h')
+#url="http://SERVER/$pkgname/"
+license=('GPL')
+#makedepends=('go')
+options=('!strip' '!emptydirs')
+#source=("http://SERVER/$pkgname/$pkgname-$pkgver.tar.gz")
+#sha256sums=('00112233445566778899aabbccddeeff')
+
+build() {
+  cd ..
+  go build
+}
+
+package() {
+  cd ..
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm655 "$pkgname.service" "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+  install -Dm655 "$pkgname.socket" "$pkgdir/usr/lib/systemd/system/$pkgname.socket"
+  install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
+}
+
+# vim:set ts=2 sw=2 et:
