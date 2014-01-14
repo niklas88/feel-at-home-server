@@ -9,7 +9,7 @@ arch=('x86_64' 'i686' 'armv6h')
 license=('GPL')
 #makedepends=('go')
 options=('!strip' '!emptydirs')
-source=("$pkgname.service" "$pkgname.socket" "config.json" "lampserver.go" "lampgit::git+ssh://uni@sceneproject.org/home/uni/lamp.git")
+source=("$pkgname.service" "$pkgname.socket" "lampgit::git+ssh://uni@sceneproject.org/home/uni/lamp.git")
 
 build() {
   # "self contained build" for people who don't have GOPATH set:
@@ -30,14 +30,9 @@ build() {
 package() {
   install -Dm655 "$pkgname.service" "$pkgdir/usr/lib/systemd/system/$pkgname.service"
   install -Dm655 "$pkgname.socket" "$pkgdir/usr/lib/systemd/system/$pkgname.socket"
-  install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
 
   cd go/src/lamp/lampserver
   install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
 }
 
-md5sums=('ca46c1cc99f101892a8047d66ac249ca'
-         '3412c76f0c152ba9abba8a26975fb457'
-         '505bbe316908294d18495a00b39a51b9'
-         'b40d55d182833bbb985287b86adcd46d'
-         'SKIP')
