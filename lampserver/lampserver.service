@@ -1,0 +1,13 @@
+[Unit]
+Description=Lamp Server
+Requires=network.target
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/lampserver -configfilename=/etc/lampserver/config.json
+User=http
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
