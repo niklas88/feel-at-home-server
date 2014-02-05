@@ -50,7 +50,7 @@ func (w *Whitefade) Apply() (time.Duration, error) {
 	} else {
 		w.current--
 	}
-	if w.step < 255 {
+	if w.step < 254 {
 		w.step++
 	} else {
 		w.step = 0
