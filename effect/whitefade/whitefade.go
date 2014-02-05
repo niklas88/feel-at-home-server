@@ -45,16 +45,16 @@ func (w *Whitefade) Configure(conf effect.Config) {
 
 func (w *Whitefade) Apply() (time.Duration, error) {
 
-	if w.upward {
-		w.current++
-	} else {
-		w.current--
-	}
-	if w.step < 254 {
+	if w.step < 255 {
 		w.step++
 	} else {
 		w.step = 0
 		w.upward = !w.upward
+	}
+	if w.upward {
+		w.current++
+	} else {
+		w.current--
 	}
 
 	err := w.lamp.SetBrightness(w.current)
