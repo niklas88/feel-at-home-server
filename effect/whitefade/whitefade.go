@@ -29,7 +29,7 @@ func init() {
 }
 
 func NewWhitefadeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Whitefade{255, 255, true, l, 30 * time.Millisecond}
+	return &Whitefade{0, 0, true, l, 30 * time.Millisecond}
 }
 
 func (w *Whitefade) Configure(conf effect.Config) {
