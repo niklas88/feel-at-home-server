@@ -3,7 +3,7 @@
 	"devices":[
 		{
 			"typ": "udpstripelamp",
-			"lampAddress": "192.168.0.177:8888",
+			"lampAddress": "192.168.0.84:8383",
 			"id": "big",
 			"name": "Big Lamp",
 			"lampStripes" : 4,
