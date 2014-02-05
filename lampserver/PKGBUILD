@@ -9,20 +9,34 @@ arch=('x86_64' 'i686' 'armv6h')
 license=('GPL')
 #makedepends=('go')
 options=('!strip' '!emptydirs')
-#source=("http://SERVER/$pkgname/$pkgname-$pkgver.tar.gz")
-#sha256sums=('00112233445566778899aabbccddeeff')
+backup=('etc/lampserver/config.json')
+source=("$pkgname.service" "$pkgname.socket" "lampgit::git+ssh://uni@sceneproject.org/home/uni/lamp.git")
 
 build() {
-  cd ..
+  # "self contained build" for people who don't have GOPATH set:
+  # set GOPATH to $srcdir/go
+  # put lampserver git repository in $srcdir/go/src/lamp/lampserver
+  # then go get and go build
+  unset GOROOT
+  export GOPATH="$PWD/go"
+  rm -rf go/src
+  mkdir -p go/src
+  mv lampgit go/src/lamp
+  cd go/src/lamp/lampserver
+
+  go get
   go build
 }
 
 package() {
-  cd ..
-  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm655 "$pkgname.service" "$pkgdir/usr/lib/systemd/system/$pkgname.service"
   install -Dm655 "$pkgname.socket" "$pkgdir/usr/lib/systemd/system/$pkgname.socket"
+
+  cd go/src/lamp/lampserver
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
 }
 
-# vim:set ts=2 sw=2 et:
+md5sums=('ca46c1cc99f101892a8047d66ac249ca'
+         '3412c76f0c152ba9abba8a26975fb457'
+         'SKIP')
