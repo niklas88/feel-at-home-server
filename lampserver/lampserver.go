@@ -14,6 +14,7 @@ import (
 	_ "lamp/effect/sunrise"
 	_ "lamp/effect/wheel"
 	_ "lamp/effect/wheel2"
+	_ "lamp/effect/strobe"
 	"lamp/lampbase"
 	"log"
 	"net"
