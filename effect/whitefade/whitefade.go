@@ -45,7 +45,7 @@ func (w *Whitefade) Configure(conf effect.Config) {
 
 func (w *Whitefade) Apply() (time.Duration, error) {
 
-	err := w.lamp.SetBrightness(uint8(math.Pow(float64(w.current)/255, 4) * 255))
+	err := w.lamp.SetBrightness(uint8(math.Pow(float64(w.current)/255, 2.5) * 255))
 	if w.upward {
 		w.current++
 	} else {
