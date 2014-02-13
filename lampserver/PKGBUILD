@@ -37,6 +37,11 @@ package() {
   install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
 }
 
+pkgver() {
+  cd "$srcdir/repo"
+  git describe --long --tags | sed -r 's/([^-]*-g)/r\1/;s/-/./g'
+}
+
 md5sums=('ca46c1cc99f101892a8047d66ac249ca'
          '3412c76f0c152ba9abba8a26975fb457'
          'SKIP')
