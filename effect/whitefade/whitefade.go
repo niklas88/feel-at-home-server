@@ -24,12 +24,12 @@ func init() {
 		Info: effect.Info{
 			Name:        "Whitefade",
 			Description: "Fades with white color"},
-		ConfigFactory: func() effect.Config { return &WhitefadeConfig{"30ms"} },
+		ConfigFactory: func() effect.Config { return &WhitefadeConfig{"15ms"} },
 		Factory:       effect.DimLampEffectFactory(NewWhitefadeEffect)})
 }
 
 func NewWhitefadeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Whitefade{0, true, l, 30 * time.Millisecond}
+	return &Whitefade{0, true, l, 15 * time.Millisecond}
 }
 
 func (w *Whitefade) Configure(conf effect.Config) {
@@ -45,7 +45,7 @@ func (w *Whitefade) Configure(conf effect.Config) {
 
 func (w *Whitefade) Apply() (time.Duration, error) {
 
-	err := w.lamp.SetBrightness(uint8(math.Pow(float64(w.current)/255, 2.5) * 255))
+	err := w.lamp.SetBrightness(uint8((math.Pow(float64(w.current)/255, 2.5)+float64(w.current)/255)/2* 255))
 	if w.upward {
 		w.current++
 	} else {
