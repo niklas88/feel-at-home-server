@@ -2,7 +2,8 @@
 
 pkgname=lampserver
 pkgver=0.2
-pkgrel=1
+pkgver=r122.1f5d45f
+pkgrel=2
 pkgdesc="Server for lamps"
 arch=('x86_64' 'i686' 'armv6h')
 #url="http://SERVER/$pkgname/"
@@ -35,6 +36,11 @@ package() {
   cd go/src/lamp/lampserver
   install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
   install -Dm655 "config.json" "$pkgdir/etc/lampserver/config.json"
+}
+
+pkgver() {
+  cd "$srcdir/lampgit"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 md5sums=('ca46c1cc99f101892a8047d66ac249ca'
