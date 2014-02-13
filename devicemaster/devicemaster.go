@@ -9,8 +9,9 @@ import (
 )
 
 type DeviceInfoShort struct {
-	Name string
-	Id   string
+	Name   string
+	Id     string
+	Active bool
 }
 
 type DeviceInfo struct {
@@ -43,7 +44,7 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 		Id:            id,
 		CurrentEffect: nil,
 		Device:        dev,
-		controller:    effect.NewController()}
+		controller:    effect.NewController(dev)}
 	go device.controller.Run()
 	d.devices[id] = device
 }
@@ -68,15 +69,38 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 	info.Config = config
 	dev.CurrentEffect = info
 	dev.controller.EffectChan <- eff
+	dev.Active = true
+	return nil
+}
+
+func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
+	d.Lock()
+	defer d.Unlock()
+
+	dev, ok := d.devices[deviceId]
+	if !ok {
+		return errors.New("Unknown device " + deviceId)
+	}
+	if dev.Active == active {
+		return nil
+	}
+
+	if active {
+		dev.controller.StateChange <- effect.Activate
+	} else {
+		dev.controller.StateChange <- effect.Deactivate
+	}
+	dev.Active = active
 	return nil
 }
 
 func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
+	// Copy for concurrency safety
 	var devList []DeviceInfoShort
 	d.RLock()
 	defer d.RUnlock()
 	for _, v := range d.devices {
-		devList = append(devList, DeviceInfoShort{Name: v.Name, Id: v.Id})
+		devList = append(devList, DeviceInfoShort{Name: v.Name, Id: v.Id, Active: v.Active})
 	}
 	return devList
 }
