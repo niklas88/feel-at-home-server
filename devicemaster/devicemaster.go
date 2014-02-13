@@ -16,7 +16,7 @@ type DeviceInfoShort struct {
 type DeviceInfo struct {
 	Name          string
 	Id            string
-	CurrentEffect *effect.Info `json:"-"`
+	CurrentEffect *effect.Info    `json:"-"`
 	Device        lampbase.Device `json:"-"`
 	controller    *effect.Controller
 }
@@ -80,12 +80,12 @@ func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
 	return devList
 }
 
-func (d *DeviceMaster) Device(id string) (DeviceInfo, bool) {
+func (d *DeviceMaster) Device(id string) (*DeviceInfo, bool) {
 	d.RLock()
 	defer d.RUnlock()
 	dev, ok := d.devices[id]
 	if !ok {
-		return DeviceInfo{}, ok
+		return &DeviceInfo{}, ok
 	}
-	return *dev, true
+	return dev, true
 }
