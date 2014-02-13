@@ -1,7 +1,7 @@
 # Maintainer: Niklas Schnelle <niklas@komani.de>
 
 pkgname=lampserver
-pkgver=0.1
+pkgver=r119.5753457
 pkgrel=1
 pkgdesc="Server for lamps"
 arch=('x86_64' 'i686' 'armv6h')
@@ -38,8 +38,8 @@ package() {
 }
 
 pkgver() {
-  cd "$srcdir/repo"
-  git describe --long --tags | sed -r 's/([^-]*-g)/r\1/;s/-/./g'
+  cd "$srcdir/lampgit"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
 md5sums=('ca46c1cc99f101892a8047d66ac249ca'
