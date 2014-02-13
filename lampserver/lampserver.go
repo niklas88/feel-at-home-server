@@ -59,7 +59,7 @@ func DeviceHandler(w http.ResponseWriter, req *http.Request) {
 	deviceId := vars["id"]
 	device, ok := dm.Device(deviceId)
 	if !ok {
-		log.Println("Did not find", device)
+		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
 	}
@@ -78,7 +78,7 @@ func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
 	deviceId := vars["id"]
 	device, ok := dm.Device(deviceId)
 	if !ok {
-		log.Println("Did not find", device)
+		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
 	}
@@ -105,9 +105,9 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(req)
 	deviceId := vars["id"]
-	device, ok := dm.Device(deviceId)
+	_, ok := dm.Device(deviceId)
 	if !ok {
-		log.Println("Did not find", device)
+		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
 	}
@@ -121,7 +121,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	config, ok := effect.DefaultRegistry.Config(put.Name)
 	if !ok {
-		log.Println("Did not find", device)
+		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
 	}
@@ -137,13 +137,39 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write([]byte{})
 }
 
+type ActivePut struct {
+	Active bool
+}
+
+func ActivePutHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	vars := mux.Vars(req)
+	deviceId := vars["id"]
+	_, ok := dm.Device(deviceId)
+	if !ok {
+		log.Println("Did not find", deviceId)
+		http.NotFound(w, req)
+		return
+	}
+	put := &ActivePut{}
+	decoder := json.NewDecoder(req.Body)
+	err := decoder.Decode(put)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "darn fuck it", 400)
+		return
+	}
+	dm.SetActive(deviceId, put.Active)
+	w.Write([]byte{})
+}
+
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(req)
 	deviceId := vars["id"]
 	device, ok := dm.Device(deviceId)
 	if !ok {
-		log.Println("Did not find", device)
+		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
 	}
@@ -171,7 +197,6 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 		if okLampAddress && okID && okName && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
 			addr, err := net.ResolveUDPAddr("udp4", lampAddress)
 			if err != nil {
-				log.Println("bam5")
 				log.Fatal("Couldn't resolve", err)
 				return "", "", nil
 			}
@@ -255,6 +280,7 @@ func main() {
 	r.HandleFunc("/devices/{id}", DeviceHandler).Methods("GET")
 	r.HandleFunc("/devices/{id}/effect", EffectGetHandler).Methods("GET")
 	r.HandleFunc("/devices/{id}/effect", EffectPutHandler).Methods("PUT")
+	r.HandleFunc("/devices/{id}/active", ActivePutHandler).Methods("PUT")
 	r.HandleFunc("/devices/{id}/available", EffectListHandler)
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir(staticServeDir))))
 	// Redirect toplevel requests to the static folder so browsers find index.html
@@ -267,6 +293,11 @@ func main() {
 	} else {
 		l, err = net.FileListener(files[0])
 	}
+
+	if err != nil {
+		log.Fatal("Could not create Listener: ", err)
+	}
+
 	if err = http.Serve(l, r); err != nil {
 		log.Fatal("Serve: ", err)
 	}
