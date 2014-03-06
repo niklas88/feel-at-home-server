@@ -25,15 +25,15 @@ func (l *UdpStripeLamp) Power(on bool) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.buf[1] = 'P'
+	l.buf[0] = 'P'
 	if on {
-		l.buf[2] = 1
+		l.buf[1] = 1
 
 	} else {
-		l.buf[2] = 0
+		l.buf[1] = 0
 	}
 
-	err := l.trans.SendReliable(l.buf[:3])
+	err := l.trans.SendReliable(l.buf[:2])
 	return err
 }
 
@@ -46,10 +46,10 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.buf[1] = 'C'
+	l.buf[0] = 'C'
 	c := color.RGBAModel.Convert(col).(color.RGBA)
-	l.buf[2], l.buf[3], l.buf[4] = c.R, c.G, c.B
-	err := l.trans.SendReliable(l.buf[:5])
+	l.buf[1], l.buf[2], l.buf[3] = c.R, c.G, c.B
+	err := l.trans.SendReliable(l.buf[:4])
 	// Change internal model
 	if err == nil {
 		for _, stripe := range l.stripes {
