@@ -1,66 +1,16 @@
 package lampbase
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"image/color"
 	"net"
-	"time"
 )
-
-const maxTries = 4
 
 type UdpStripeLamp struct {
 	stripes []Stripe
-	raddr   *net.UDPAddr
-	laddr   *net.UDPAddr
-	conn    *net.UDPConn
+	trans   *ReliableUDPTransport
 	buf     []byte
 	seqNum  uint8
-}
-
-// Bufs 0th value will be overwritten with the sequence number
-func (l *UdpStripeLamp) sendReliable(buf []uint8) error {
-	var (
-		err    error
-		read   int
-		ackBuf [4]byte
-	)
-	// TODO: Log all errors
-	success := false
-	tries := 0
-	l.seqNum++
-	l.buf[0] = l.seqNum
-	for !success && tries <= maxTries {
-		tries++
-		_, err = l.conn.Write(buf)
-		if err == nil {
-			// Try waiting for ACK
-			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
-			for !success {
-				read, err = l.conn.Read(ackBuf[:])
-				//fmt.Printf("Received \"%q\" length %d\n", ackBuf, read)
-				if err != nil && err.(*net.OpError).Timeout() {
-					err = fmt.Errorf("no ack received %q err: %s", ackBuf, err)
-					break
-				}
-
-				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-					err = fmt.Errorf("Ack broken: %q", ackBuf[:])
-					break
-				} else {
-					// We just ignore/drop non matching ACKs they are old
-					if ackBuf[3] == l.seqNum {
-						success = true
-						err = nil
-					}
-				}
-			}
-		}
-
-	}
-	return err
 }
 
 func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
@@ -68,11 +18,11 @@ func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
 	for i := range stripes {
 		stripes[i] = make(Stripe, ledsPerStripe)
 	}
-	return &UdpStripeLamp{stripes, nil, nil, nil, make([]uint8, ledsPerStripe*numStripes*3+2), 3}
+	return &UdpStripeLamp{stripes, nil, make([]uint8, ledsPerStripe*numStripes*3+2), 3}
 }
 
 func (l *UdpStripeLamp) Power(on bool) error {
-	if l.conn == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
 	l.buf[1] = 'P'
@@ -83,7 +33,7 @@ func (l *UdpStripeLamp) Power(on bool) error {
 		l.buf[2] = 0
 	}
 
-	err := l.sendReliable(l.buf[:3])
+	err := l.trans.SendReliable(l.buf[:3])
 	return err
 }
 
@@ -93,13 +43,13 @@ func (l *UdpStripeLamp) SetBrightness(b uint8) error {
 }
 
 func (l *UdpStripeLamp) SetColor(col color.Color) error {
-	if l.conn == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
 	l.buf[1] = 'C'
 	c := color.RGBAModel.Convert(col).(color.RGBA)
 	l.buf[2], l.buf[3], l.buf[4] = c.R, c.G, c.B
-	err := l.sendReliable(l.buf[:5])
+	err := l.trans.SendReliable(l.buf[:5])
 	// Change internal model
 	if err == nil {
 		for _, stripe := range l.stripes {
@@ -116,28 +66,27 @@ func (l *UdpStripeLamp) Stripes() []Stripe {
 }
 
 func (l *UdpStripeLamp) Close() error {
-	err := l.conn.Close()
-	l.conn = nil
+	err := l.trans.Close()
+	l.trans = nil
 	return err
 }
 
 func (l *UdpStripeLamp) Dial(laddr, raddr *net.UDPAddr) (err error) {
-	l.raddr, l.laddr = raddr, laddr
 
-	conn, err := net.DialUDP("udp4", laddr, raddr)
+	trans, err := DialReliableUDPTransport(laddr, raddr)
 	if err == nil {
-		l.conn = conn
+		l.trans = trans
 	}
 	return
 }
 
 func (l *UdpStripeLamp) UpdateAll() error {
-	if l.conn == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 
 	}
-	l.buf[1] = 'D'
-	bufpos := 2
+	l.buf[0] = 'D'
+	bufpos := 1
 	for i, s := range l.stripes {
 		if i%2 == 0 {
 			for j := 0; j < len(s); j++ {
@@ -152,6 +101,6 @@ func (l *UdpStripeLamp) UpdateAll() error {
 		}
 	}
 
-	err := l.sendReliable(l.buf)
+	err := l.trans.SendReliable(l.buf)
 	return err
 }
