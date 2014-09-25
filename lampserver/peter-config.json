@@ -38,5 +38,12 @@
 			"id": "screen",
 			"name": "Screen Switch"
 		}
+		{
+			"typ": "udppowerdevice",
+			"devicePort": 5,
+			"lampAddress": "192.168.0.84:8080",
+			"id": "audiosystem",
+			"name": "Audio System"
+		}
 	]
 }
