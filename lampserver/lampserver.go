@@ -183,17 +183,20 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func deviceFromConfig(configDevice map[string]interface{}) (string, string, lampbase.Device) {
+	// TODO Refactor
 	lampAddress, okLampAddress := configDevice["lampAddress"]
 	id, okID := configDevice["id"]
+	devicePort, okDP := configDevice["devicePort"]
 	name, okName := configDevice["name"]
 	t, okTyp := configDevice["typ"]
-	if okLampAddress && okID && okName && okTyp {
+	if okLampAddress && okID && okName && okDP && okTyp {
 		lampAddress, okLampAddress := lampAddress.(string)
 		id, okID := id.(string)
 		name, okName := name.(string)
+		devicePort, okDP := devicePort.(uint8)
 		t, okTyp := t.(string)
 
-		if okLampAddress && okID && okName && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
+		if okLampAddress && okID && okName && okDP && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
 			addr, err := net.ResolveUDPAddr("udp4", lampAddress)
 			if err != nil {
 				log.Fatal("Couldn't resolve", err)
@@ -209,7 +212,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 					lampLedsPerStripe, okLedsPerStripe := lampLedsPerStripeInterface.(float64)
 					if okLampStripes && okLedsPerStripe {
 						udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
-						if err = udpStripeLamp.Dial(nil, addr); err != nil {
+						if err = udpStripeLamp.Dial(nil, addr, devicePort); err != nil {
 							log.Println(err)
 							return "", "", nil
 						}
@@ -224,7 +227,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udpanalogcolorlamp":
 				udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
-				if err = udpAnalogColorLamp.Dial(nil, addr); err != nil {
+				if err = udpAnalogColorLamp.Dial(nil, addr, devicePort); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
@@ -232,7 +235,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udpdimlamp":
 				udpDimLamp := lampbase.NewUdpDimLamp()
-				if err = udpDimLamp.Dial(nil, addr); err != nil {
+				if err = udpDimLamp.Dial(nil, addr, devicePort); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
@@ -240,7 +243,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udppowerdevice":
 				udpPowerDevice := lampbase.NewUdpPowerDevice()
-				if err = udpPowerDevice.Dial(nil, addr); err != nil {
+				if err = udpPowerDevice.Dial(nil, addr, devicePort); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
