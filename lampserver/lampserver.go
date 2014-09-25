@@ -193,7 +193,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 		lampAddress, okLampAddress := lampAddress.(string)
 		id, okID := id.(string)
 		name, okName := name.(string)
-		devicePort, okDP := devicePort.(uint8)
+		devicePort, okDP := devicePort.(float64)
 		t, okTyp := t.(string)
 
 		if okLampAddress && okID && okName && okDP && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
@@ -212,7 +212,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 					lampLedsPerStripe, okLedsPerStripe := lampLedsPerStripeInterface.(float64)
 					if okLampStripes && okLedsPerStripe {
 						udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
-						if err = udpStripeLamp.Dial(nil, addr, devicePort); err != nil {
+						if err = udpStripeLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
 							log.Println(err)
 							return "", "", nil
 						}
@@ -227,7 +227,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udpanalogcolorlamp":
 				udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
-				if err = udpAnalogColorLamp.Dial(nil, addr, devicePort); err != nil {
+				if err = udpAnalogColorLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
@@ -235,7 +235,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udpdimlamp":
 				udpDimLamp := lampbase.NewUdpDimLamp()
-				if err = udpDimLamp.Dial(nil, addr, devicePort); err != nil {
+				if err = udpDimLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
@@ -243,7 +243,7 @@ func deviceFromConfig(configDevice map[string]interface{}) (string, string, lamp
 				break
 			case "udppowerdevice":
 				udpPowerDevice := lampbase.NewUdpPowerDevice()
-				if err = udpPowerDevice.Dial(nil, addr, devicePort); err != nil {
+				if err = udpPowerDevice.Dial(nil, addr, uint8(devicePort)); err != nil {
 					log.Println(err)
 					return "", "", nil
 				}
