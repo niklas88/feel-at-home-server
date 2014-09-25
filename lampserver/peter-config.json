@@ -33,7 +33,7 @@
 		},
 		{
 			"typ": "udppowerdevice",
-			"devicePort": 3,
+			"devicePort": 4,
 			"lampAddress": "192.168.0.84:8080",
 			"id": "screen",
 			"name": "Screen Switch"
