@@ -47,10 +47,10 @@
 		},
                 {
                         "typ": "udppowerdevice",
-                        "devicePort": 5,
+                        "devicePort": 6,
                         "lampAddress": "192.168.0.84:8080",
-                        "id": "audiosystem",
-                        "name": "Audio System"
+                        "id": "powerstrip",
+                        "name": "Power Strip"
                 }
 	]
 }
