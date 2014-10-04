@@ -51,6 +51,13 @@
                         "lampAddress": "192.168.0.84:8080",
                         "id": "powerstrip",
                         "name": "Power Strip"
+                },
+		{
+                        "typ": "udppowerdevice",
+                        "devicePort": 7,
+                        "lampAddress": "192.168.0.84:8080",
+                        "id": "mainlamp",
+                        "name": "Main Lamp"
                 }
 	]
 }
