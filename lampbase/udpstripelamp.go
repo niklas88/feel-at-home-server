@@ -51,7 +51,7 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	l.buf[1] = 'C'
 	c := color.RGBAModel.Convert(col).(color.RGBA)
 	l.buf[2], l.buf[3], l.buf[4] = c.R, c.G, c.B
-	err := l.trans.SendReliable(l.buf[:4])
+	err := l.trans.SendReliable(l.buf[:6])
 	// Change internal model
 	if err == nil {
 		for _, stripe := range l.stripes {
