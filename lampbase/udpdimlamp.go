@@ -6,19 +6,20 @@ import (
 )
 
 type UdpDimLamp struct {
-	raddr      *net.UDPAddr
-	laddr      *net.UDPAddr
-	conn       *net.UDPConn
+   trans      *ReliableUDPTransport
 	devicePort uint8
 	buf        []uint8
 }
 
 func NewUdpDimLamp() *UdpDimLamp {
 
-	return &UdpDimLamp{nil, nil, nil, 0, make([]uint8, 3)}
+	return &UdpDimLamp{nil, 0, make([]uint8, 3)}
 }
 
 func (l *UdpDimLamp) Power(on bool) error {
+   if l.trans == nil {
+		return errors.New("Not Dialed")
+	}
 	l.buf[0] = l.devicePort
 	l.buf[1] = 'P'
 	if on {
@@ -27,37 +28,33 @@ func (l *UdpDimLamp) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-	written, err := l.conn.Write(l.buf[:3])
-	if err == nil && written != 3 {
-		err = errors.New("Couldn't write udp packet in one call")
-	}
+	err :=  l.trans.SendReliable(l.buf[:3])
 	return err
 }
 
 func (l *UdpDimLamp) SetBrightness(b uint8) error {
+	if l.trans == nil {
+		return errors.New("Not Dialed")
+	}
 	l.buf[0] = l.devicePort
 	l.buf[1] = 'B'
 	l.buf[2] = b
-	written, err := l.conn.Write(l.buf[:3])
-	if err == nil && written != 3 {
-		err = errors.New("Couldn't write udp packet in one call")
-	}
+   err :=  l.trans.SendReliable(l.buf[:3])
 	return err
 }
 
 func (l *UdpDimLamp) Close() error {
-	err := l.conn.Close()
-	l.conn = nil
+	err := l.trans.Close()
+	l.trans = nil
 	return err
 }
 
 func (l *UdpDimLamp) Dial(laddr, raddr *net.UDPAddr, devicePort uint8) (err error) {
-	l.raddr, l.laddr = raddr, laddr
 	l.devicePort = devicePort
 
-	conn, err := net.DialUDP("udp4", laddr, raddr)
+	trans, err := DialReliableUDPTransport(laddr, raddr)
 	if err == nil {
-		l.conn = conn
+		l.trans = trans
 	}
 	return
 }
