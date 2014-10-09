@@ -34,7 +34,7 @@ func (l *UdpStripeLamp) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-	err := l.trans.SendReliable(l.buf[:3])
+	err := l.trans.SendReliable(l.buf[:4])
 	return err
 }
 
