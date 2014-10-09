@@ -8,11 +8,10 @@ import (
 
 type UdpStripeLamp struct {
 	stripes    []Stripe
-	raddr      *net.UDPAddr
-	laddr      *net.UDPAddr
-	conn       *net.UDPConn
+	trans      *ReliableUDPTransport
 	devicePort uint8
-	buf        []uint8
+	buf        []byte
+	seqNum     uint8
 }
 
 func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
@@ -20,10 +19,13 @@ func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
 	for i := range stripes {
 		stripes[i] = make(Stripe, ledsPerStripe)
 	}
-	return &UdpStripeLamp{stripes, nil, nil, nil, 0, make([]uint8, ledsPerStripe*numStripes*3+2)}
+	return &UdpStripeLamp{stripes, nil, 0, make([]uint8, ledsPerStripe*numStripes*3+3), 3}
 }
 
 func (l *UdpStripeLamp) Power(on bool) error {
+	if l.trans == nil {
+		return errors.New("Not Dialed")
+	}
 	l.buf[0] = l.devicePort
 	l.buf[1] = 'P'
 	if on {
@@ -32,10 +34,7 @@ func (l *UdpStripeLamp) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-	written, err := l.conn.Write(l.buf[:3])
-	if err == nil && written != 3 {
-		err = errors.New("Couldn't write udp packet in one call")
-	}
+	err := l.trans.SendReliable(l.buf[:3])
 	return err
 }
 
@@ -45,17 +44,14 @@ func (l *UdpStripeLamp) SetBrightness(b uint8) error {
 }
 
 func (l *UdpStripeLamp) SetColor(col color.Color) error {
-	if l.conn == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
 	l.buf[0] = l.devicePort
 	l.buf[1] = 'C'
 	c := color.RGBAModel.Convert(col).(color.RGBA)
 	l.buf[2], l.buf[3], l.buf[4] = c.R, c.G, c.B
-	written, err := l.conn.Write(l.buf[:5])
-	if err == nil && written != 5 {
-		err = errors.New("Couldn't write udp packet in one call")
-	}
+	err := l.trans.SendReliable(l.buf[:4])
 	// Change internal model
 	if err == nil {
 		for _, stripe := range l.stripes {
@@ -72,24 +68,23 @@ func (l *UdpStripeLamp) Stripes() []Stripe {
 }
 
 func (l *UdpStripeLamp) Close() error {
-	err := l.conn.Close()
-	l.conn = nil
+	err := l.trans.Close()
+	l.trans = nil
 	return err
 }
 
 func (l *UdpStripeLamp) Dial(laddr, raddr *net.UDPAddr, devicePort uint8) (err error) {
-	l.raddr, l.laddr = raddr, laddr
 	l.devicePort = devicePort
 
-	conn, err := net.DialUDP("udp4", laddr, raddr)
+	trans, err := DialReliableUDPTransport(laddr, raddr)
 	if err == nil {
-		l.conn = conn
+		l.trans = trans
 	}
 	return
 }
 
 func (l *UdpStripeLamp) UpdateAll() error {
-	if l.conn == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 
 	}
@@ -110,9 +105,6 @@ func (l *UdpStripeLamp) UpdateAll() error {
 		}
 	}
 
-	written, err := l.conn.Write(l.buf)
-	if err == nil && written != len(l.buf) {
-		err = errors.New("Couldn't write buf in single write/packet")
-	}
+	err := l.trans.SendReliable(l.buf)
 	return err
 }

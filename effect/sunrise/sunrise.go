@@ -14,10 +14,27 @@ type SunriseConfig struct {
 
 type Sunrise struct {
 	step    uint32
-	current color.RGBA
+	current int
 	lamp    lampbase.ColorLamp
 	delay   time.Duration
 }
+
+type floatRGB struct {
+	r float64
+	g float64
+	b float64
+}
+
+func (e *floatRGB) RGB() (r float64, g float64, b float64) {
+	r = e.r
+	g = e.g
+	b = e.b
+	return
+}
+
+const stepsPerColor = 2500
+
+var colorList []floatRGB
 
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
@@ -26,10 +43,20 @@ func init() {
 			Description: "A sunrise effect for color lamps"},
 		ConfigFactory: func() effect.Config { return &SunriseConfig{"30ms"} },
 		Factory:       effect.ColorLampEffectFactory(NewSunriseEffect)})
+
+	colorList = []floatRGB{
+		floatRGB{0.0, 0.0, 0.0},
+		floatRGB{0.0, 0.0, 10.0},
+		floatRGB{10.0, 0.0, 5.0},
+		floatRGB{50.0, 0.0, 0.0},
+		floatRGB{100.0, 40.0, 0.0},
+		floatRGB{160.0, 80.0, 0.0},
+		floatRGB{200.0, 100.0, 0.0},
+		floatRGB{255.0, 200.0, 100.0}}
 }
 
 func NewSunriseEffect(l lampbase.ColorLamp) effect.Effect {
-	return &Sunrise{0, color.RGBA{0, 0, 0, 0}, l, 30 * time.Millisecond}
+	return &Sunrise{0, 0, l, 30 * time.Millisecond}
 }
 
 func (e *Sunrise) Configure(conf effect.Config) {
@@ -44,29 +71,22 @@ func (e *Sunrise) Configure(conf effect.Config) {
 }
 
 func (e *Sunrise) Apply() (time.Duration, error) {
-	var r, g, b float64
-	if e.step < 5000 {
-		r = 204.0 * float64(e.step) / 5000.0
-	} else if e.step < 10000 {
-		r = 204.0 + (255.0-205.0)*float64(e.step-5000)/5000.0
-		g = 51.0 * float64(e.step-5000) / 5000.0
-	} else if e.step < 15000 {
-		r = 255.0
-		g = 51.0 + (255.0-51.0)*float64(e.step-10000)/5000.0
-		b = 0
-	} else if e.step < 20000 {
-		r = 255.0
-		g = 255.0
-		b = 255.0 * float64(e.step-15000) / 5000.0
-	} else if e.step >= 20000 {
-		r = 255.0
-		g = 255.0
-		b = 255.0
-		e.delay = -1
+	if e.step >= stepsPerColor {
+		e.step = 0
+		e.current++
+		if e.current >= len(colorList)-1 {
+			e.delay = -1
+			return e.delay, nil
+		}
 	}
-	e.step++
+	r, g, b := colorList[e.current].RGB()
+	rn, gn, bn := colorList[e.current+1].RGB()
+	mix := float64(e.step) / stepsPerColor
+	r = r + mix*(rn-r)
+	g = g + mix*(gn-g)
+	b = b + mix*(bn-b)
 
-	e.current.R, e.current.G, e.current.B = uint8(r), uint8(g), uint8(b)
-	err := e.lamp.SetColor(&e.current)
+	e.step++
+	err := e.lamp.SetColor(color.RGBA{uint8(r), uint8(g), uint8(b), 0})
 	return e.delay, err
 }
