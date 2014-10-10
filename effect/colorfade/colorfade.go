@@ -1,8 +1,8 @@
 package colorefade
 
 import (
-   "github.com/pwaller/go-hexcolor"
-   "image/color"
+	"github.com/pwaller/go-hexcolor"
+	"image/color"
 	"lamp/effect"
 	"lamp/lampbase"
 	"log"
@@ -16,21 +16,22 @@ type ColorfadeConfig struct {
 }
 
 type Colorfade struct {
-   color color.RGBA
-   currentStep uint8 
-	upward  bool
-	lamp    lampbase.ColorLamp
-	delay   time.Duration
+	color       color.RGBA
+	currentStep uint8
+	upward      bool
+	lamp        lampbase.ColorLamp
+	delay       time.Duration
 }
 
 const maxSteps = 255
 
-func fadeColor(currentStep uint8, c color.RGBA) (color.RGBA) {
+func fadeColor(currentStep uint8, c color.RGBA) color.RGBA {
 	var newColor color.RGBA
-	multiplicator := uint8((math.Pow(float64(currentStep)/maxSteps, 2.5)+float64(currentStep)/maxSteps)/2* maxSteps)
-	newColor.R = c.R/maxSteps*multiplicator
-	newColor.G = c.G/maxSteps*multiplicator
-	newColor.B = c.B/maxSteps*multiplicator
+	multiplicator := (math.Pow(float64(currentStep)/maxSteps, 2.5) + float64(currentStep)/maxSteps) / 2 * maxSteps
+
+	newColor.R = uint8(float64(c.R) / maxSteps * multiplicator)
+	newColor.G = uint8(float64(c.G) / maxSteps * multiplicator)
+	newColor.B = uint8(float64(c.B) / maxSteps * multiplicator)
 	return newColor
 
 }
@@ -40,12 +41,12 @@ func init() {
 		Info: effect.Info{
 			Name:        "Colorfade",
 			Description: "Fades with Color"},
-		ConfigFactory: func() effect.Config { return &ColorfadeConfig{"#ffffff","15ms"} },
+		ConfigFactory: func() effect.Config { return &ColorfadeConfig{"#ffffff", "15ms"} },
 		Factory:       effect.ColorLampEffectFactory(NewColorfadeEffect)})
 }
 
 func NewColorfadeEffect(l lampbase.ColorLamp) effect.Effect {
-	return &Colorfade{currentStep: 0, upward: true, lamp:l, delay: 15 * time.Millisecond}
+	return &Colorfade{currentStep: 0, upward: true, lamp: l, delay: 15 * time.Millisecond}
 }
 
 func (cf *Colorfade) Configure(conf effect.Config) {
@@ -57,14 +58,14 @@ func (cf *Colorfade) Configure(conf effect.Config) {
 		log.Println(err)
 		cf.delay = 30 * time.Millisecond
 	}
-	
+
 	m := color.RGBAModel
 	cf.color = m.Convert(colorfadeConf.Color).(color.RGBA)
 }
 
 func (cf *Colorfade) Apply() (time.Duration, error) {
-	newColor := fadeColor(cf.currentStep,cf.color)
-	
+	newColor := fadeColor(cf.currentStep, cf.color)
+
 	if cf.upward {
 		cf.currentStep++
 	} else {
@@ -74,10 +75,8 @@ func (cf *Colorfade) Apply() (time.Duration, error) {
 	if cf.currentStep == maxSteps || cf.currentStep == 0 {
 		cf.upward = !cf.upward
 	}
-	
+
 	err := cf.lamp.SetColor(&newColor)
 	return cf.delay, err
 
 }
-
-
