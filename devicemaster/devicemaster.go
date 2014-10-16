@@ -32,7 +32,7 @@ type DeviceMaster struct {
 
 func New(registry effect.Registry) *DeviceMaster {
 	return &DeviceMaster{deviceMap: make(map[string]*DeviceInfo),
-		devices: make([]DeviceInfo, 1),
+		devices: make([]DeviceInfo, 0),
 		reg:     registry}
 }
 
