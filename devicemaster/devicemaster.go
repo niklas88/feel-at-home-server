@@ -26,13 +26,13 @@ type DeviceInfo struct {
 type DeviceMaster struct {
 	sync.RWMutex
 	deviceMap map[string]*DeviceInfo
-	devices   []DeviceInfo
+	devices   []*DeviceInfo
 	reg       effect.Registry
 }
 
 func New(registry effect.Registry) *DeviceMaster {
 	return &DeviceMaster{deviceMap: make(map[string]*DeviceInfo),
-		devices: make([]DeviceInfo, 0),
+		devices: make([]*DeviceInfo, 0),
 		reg:     registry}
 }
 
@@ -42,15 +42,15 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	if _, ok := d.deviceMap[id]; ok {
 		panic("Readded device " + id)
 	}
-	d.devices = append(d.devices, DeviceInfo{Name: name,
+	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
 		CurrentEffect: nil,
 		Device:        dev,
-		controller:    effect.NewController(dev)})
+		controller:    effect.NewController(dev)}
+	d.devices = append(d.devices, newDeviceInfo)
 
-	lastDevice := &d.devices[len(d.devices)-1]
-	go lastDevice.controller.Run()
-	d.deviceMap[id] = lastDevice
+	go newDeviceInfo.controller.Run()
+	d.deviceMap[id] = newDeviceInfo
 }
 
 func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Config) error {
