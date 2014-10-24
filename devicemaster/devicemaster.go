@@ -25,34 +25,38 @@ type DeviceInfo struct {
 
 type DeviceMaster struct {
 	sync.RWMutex
-	devices map[string]*DeviceInfo
-	reg     effect.Registry
+	deviceMap map[string]*DeviceInfo
+	devices   []*DeviceInfo
+	reg       effect.Registry
 }
 
 func New(registry effect.Registry) *DeviceMaster {
-	return &DeviceMaster{devices: make(map[string]*DeviceInfo),
-		reg: registry}
+	return &DeviceMaster{deviceMap: make(map[string]*DeviceInfo),
+		devices: make([]*DeviceInfo, 0),
+		reg:     registry}
 }
 
 func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	d.Lock()
 	defer d.Unlock()
-	if _, ok := d.devices[id]; ok {
+	if _, ok := d.deviceMap[id]; ok {
 		panic("Readded device " + id)
 	}
-	device := &DeviceInfo{Name: name,
+	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
 		CurrentEffect: nil,
 		Device:        dev,
 		controller:    effect.NewController(dev)}
-	go device.controller.Run()
-	d.devices[id] = device
+	d.devices = append(d.devices, newDeviceInfo)
+
+	go newDeviceInfo.controller.Run()
+	d.deviceMap[id] = newDeviceInfo
 }
 
 func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Config) error {
 	d.Lock()
 	defer d.Unlock()
-	dev, ok := d.devices[deviceId]
+	dev, ok := d.deviceMap[deviceId]
 	if !ok {
 		return errors.New("Unknown device " + deviceId)
 	}
@@ -77,7 +81,7 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	d.Lock()
 	defer d.Unlock()
 
-	dev, ok := d.devices[deviceId]
+	dev, ok := d.deviceMap[deviceId]
 	if !ok {
 		return errors.New("Unknown device " + deviceId)
 	}
@@ -108,7 +112,7 @@ func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
 func (d *DeviceMaster) Device(id string) (DeviceInfo, bool) {
 	d.RLock()
 	defer d.RUnlock()
-	dev, ok := d.devices[id]
+	dev, ok := d.deviceMap[id]
 	if !ok {
 		return DeviceInfo{}, ok
 	}
