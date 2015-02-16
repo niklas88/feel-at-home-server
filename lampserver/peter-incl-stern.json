@@ -58,6 +58,31 @@
                         "lampAddress": "192.168.178.6:8080",
                         "id": "mainlamp",
                         "name": "Main Lamp"
-                }
+                },
+		{
+                        "typ": "udppowerdevice",
+                        "devicePort": 8,
+                        "lampAddress": "192.168.178.6:8080",
+                        "id": "christmas",
+                        "name": "Chrismas Lights"
+                },
+		{
+			"typ": "udpstripelamp",
+			"devicePort": 0,
+			"lampAddress": "192.168.178.6:8080",
+			"id": "rightstar",
+			"name": "right star",
+			"lampStripes" : 1,
+			"lampLedsPerStripe" : 20
+		},
+		{
+			"typ": "udpstripelamp",
+			"devicePort": 1,
+			"lampAddress": "192.168.178.6:8080",
+			"id": "leftstars",
+			"name": "left star",
+			"lampStripes" : 1,
+			"lampLedsPerStripe" : 20
+		}
 	]
 }
