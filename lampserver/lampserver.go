@@ -178,79 +178,84 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Write(out)
 }
 
-func deviceFromConfig(configDevice map[string]interface{}) (string, string, lampbase.Device) {
-	// TODO Refactor
-	lampAddress, okLampAddress := configDevice["lampAddress"]
-	id, okID := configDevice["id"]
-	devicePort, okDP := configDevice["devicePort"]
-	name, okName := configDevice["name"]
-	t, okTyp := configDevice["typ"]
-	if okLampAddress && okID && okName && okDP && okTyp {
-		lampAddress, okLampAddress := lampAddress.(string)
-		id, okID := id.(string)
-		name, okName := name.(string)
-		devicePort, okDP := devicePort.(float64)
-		t, okTyp := t.(string)
+type configMap map[string]interface{}
 
-		if okLampAddress && okID && okName && okDP && okTyp && lampAddress != "" && id != "" && name != "" && t != "" {
-			addr, err := net.ResolveUDPAddr("udp4", lampAddress)
-			if err != nil {
-				log.Fatal("Couldn't resolve", err)
-				return "", "", nil
-			}
-			var device lampbase.Device
-			switch t {
-			case "udpstripelamp":
-				lampStripesInterface, okLampStripes := configDevice["lampStripes"]
-				lampLedsPerStripeInterface, okLedsPerStripe := configDevice["lampLedsPerStripe"]
-				if okLampStripes && okLedsPerStripe {
-					lampStripes, okLampStripes := lampStripesInterface.(float64)
-					lampLedsPerStripe, okLedsPerStripe := lampLedsPerStripeInterface.(float64)
-					if okLampStripes && okLedsPerStripe {
-						udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
-						if err = udpStripeLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
-							log.Println(err)
-							return "", "", nil
-						}
-						device = udpStripeLamp
-					} else {
-						return "", "", nil
-					}
-				} else {
-					return "", "", nil
-				}
-
-				break
-			case "udpanalogcolorlamp":
-				udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
-				if err = udpAnalogColorLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
-					log.Println(err)
-					return "", "", nil
-				}
-				device = udpAnalogColorLamp
-				break
-			case "udpdimlamp":
-				udpDimLamp := lampbase.NewUdpDimLamp()
-				if err = udpDimLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
-					log.Println(err)
-					return "", "", nil
-				}
-				device = udpDimLamp
-				break
-			case "udppowerdevice":
-				udpPowerDevice := lampbase.NewUdpPowerDevice()
-				if err = udpPowerDevice.Dial(nil, addr, uint8(devicePort)); err != nil {
-					log.Println(err)
-					return "", "", nil
-				}
-				device = udpPowerDevice
-				break
-			}
-			return name, id, device
-		}
+func (config configMap) ensureDefined(name string) interface{} {
+	val, ok := config[name]
+	if !ok {
+		log.Fatalf("Missing %s field in config", name)
 	}
-	return "", "", nil
+	return val
+}
 
+func (config configMap) ensureNonEmptyString(name string) (result string) {
+	val := config.ensureDefined(name)
+	result, ok := val.(string)
+	if !ok || result == "" {
+		log.Fatalf("Value \"%v\" of field %s is not a string or empty", val, name)
+	}
+
+	return result
+}
+
+func (config configMap) ensureNumeric(name string) (result float64) {
+	val := config.ensureDefined(name)
+	result, ok := val.(float64)
+	if !ok {
+		log.Fatalf("Value \"%v\" of field %s is not numeric", val, name)
+	}
+
+	return result
+}
+
+func deviceFromConfig(config configMap) (name string, id string, device lampbase.Device) {
+	// TODO Refactor
+	lampAddress := config.ensureNonEmptyString("lampAddress")
+	id = config.ensureNonEmptyString("id")
+	name = config.ensureNonEmptyString("name")
+	typeName := config.ensureNonEmptyString("type")
+	devicePort := config.ensureNumeric("devicePort")
+
+	addr, err := net.ResolveUDPAddr("udp4", lampAddress)
+	if err != nil {
+		log.Fatal("Couldn't resolve", err)
+	}
+
+	switch typeName {
+	case "udpstripelamp":
+		lampStripes := config.ensureNumeric("lampStripes")
+		lampLedsPerStripe := config.ensureNumeric("lampLedsPerStripe")
+
+		udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
+		if err = udpStripeLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpStripeLamp", err)
+		}
+		device = udpStripeLamp
+
+		break
+	case "udpanalogcolorlamp":
+		udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
+		if err = udpAnalogColorLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpAnalogColorLamp", err)
+		}
+		device = udpAnalogColorLamp
+		break
+	case "udpdimlamp":
+		udpDimLamp := lampbase.NewUdpDimLamp()
+		if err = udpDimLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpDimLamp", err)
+		}
+		device = udpDimLamp
+		break
+	case "udppowerdevice":
+		udpPowerDevice := lampbase.NewUdpPowerDevice()
+		if err = udpPowerDevice.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpPowerDevice", err)
+		}
+		device = udpPowerDevice
+		break
+	}
+	return name, id, device
 }
 
 func main() {

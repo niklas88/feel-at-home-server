@@ -2,28 +2,28 @@
 	"listenaddress" : ":8080",
 	"devices":[
 		{
-			"typ": "udpanalogcolorlamp",
+			"type": "udpanalogcolorlamp",
 			"devicePort": 0,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "ceiling",
 			"name": "Ceiling Lamp"
 		},
 		{
-			"typ": "udpdimlamp",
+			"type": "udpdimlamp",
 			"devicePort": 1,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "pc",
 			"name": "PC Lamp"
 		},
 		{
-			"typ": "udpdimlamp",
+			"type": "udpdimlamp",
 			"devicePort": 2,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "bedside",
 			"name": "Bedside Lamp"
 		},
 		{
-			"typ": "udpstripelamp",
+			"type": "udpstripelamp",
 			"devicePort": 3,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "big",
@@ -32,28 +32,28 @@
 			"lampLedsPerStripe" : 16
 		},
 		{
-			"typ": "udppowerdevice",
+			"type": "udppowerdevice",
 			"devicePort": 4,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "screen",
 			"name": "Screen Switch"
 		},
 		{
-			"typ": "udppowerdevice",
+			"type": "udppowerdevice",
 			"devicePort": 5,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "audiosystem",
 			"name": "Audio System"
 		},
                 {
-                        "typ": "udppowerdevice",
+                        "type": "udppowerdevice",
                         "devicePort": 6,
                         "lampAddress": "192.168.178.6:8080",
                         "id": "powerstrip",
                         "name": "Power Strip"
                 },
 		{
-                        "typ": "udppowerdevice",
+                        "type": "udppowerdevice",
                         "devicePort": 7,
                         "lampAddress": "192.168.178.6:8080",
                         "id": "mainlamp",
