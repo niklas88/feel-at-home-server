@@ -67,6 +67,6 @@ func (w *WheelAll) Apply() (time.Duration, error) {
 	} else {
 		w.wheelPos--
 	}
-	err := w.lamp.SetColor(&c)
+	err := w.lamp.SetColor(c)
 	return w.delay, err
 }

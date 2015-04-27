@@ -41,7 +41,7 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	if err == nil {
 		for _, stripe := range l.stripes {
 			for i := range stripe {
-				stripe[i] = col.(color.RGBA)
+				stripe[i] = color.RGBAModel.Convert(col).(color.RGBA)
 			}
 		}
 	}
