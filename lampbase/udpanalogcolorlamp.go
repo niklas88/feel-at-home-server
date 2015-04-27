@@ -28,7 +28,7 @@ func (l *UdpAnalogColorLamp) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-   err := l.trans.SendReliable(l.buf[:3])
+	_, err := l.trans.Write(l.buf[:3])
 	return err
 }
 
@@ -45,7 +45,7 @@ func (l *UdpAnalogColorLamp) SetColor(col color.Color) error {
 	l.buf[1] = 'C'
 	c := color.RGBAModel.Convert(col).(color.RGBA)
 	l.buf[2], l.buf[3], l.buf[4] = c.R, c.G, c.B
-   err := l.trans.SendReliable(l.buf[:5])
+	_, err := l.trans.Write(l.buf[:5])
 	return err
 }
 

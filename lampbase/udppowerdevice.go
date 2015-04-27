@@ -27,7 +27,7 @@ func (l *UdpPowerDevice) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-	err := l.trans.SendReliable(l.buf[:3])
+	_, err := l.trans.Write(l.buf[:3])
 	return err
 }
 

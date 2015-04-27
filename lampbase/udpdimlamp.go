@@ -6,7 +6,7 @@ import (
 )
 
 type UdpDimLamp struct {
-   trans      *ReliableUDPTransport
+	trans      *ReliableUDPTransport
 	devicePort uint8
 	buf        []uint8
 }
@@ -17,7 +17,7 @@ func NewUdpDimLamp() *UdpDimLamp {
 }
 
 func (l *UdpDimLamp) Power(on bool) error {
-   if l.trans == nil {
+	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
 	l.buf[0] = l.devicePort
@@ -28,7 +28,7 @@ func (l *UdpDimLamp) Power(on bool) error {
 	} else {
 		l.buf[2] = 0
 	}
-	err :=  l.trans.SendReliable(l.buf[:3])
+	_, err := l.trans.Write(l.buf[:3])
 	return err
 }
 
@@ -39,7 +39,7 @@ func (l *UdpDimLamp) SetBrightness(b uint8) error {
 	l.buf[0] = l.devicePort
 	l.buf[1] = 'B'
 	l.buf[2] = b
-   err :=  l.trans.SendReliable(l.buf[:3])
+	_, err := l.trans.Write(l.buf[:3])
 	return err
 }
 

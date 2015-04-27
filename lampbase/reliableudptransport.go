@@ -12,42 +12,47 @@ const maxTries = 4
 type ReliableUDPTransport struct {
 	conn   *net.UDPConn
 	seqNum uint8
+	buf    bytes.Buffer
 }
 
-func (l *ReliableUDPTransport) SendReliable(b []uint8) error {
+func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 	var (
-		err    error
 		ackBuf [4]byte
-		buf    []byte
 	)
-	success := false
 	tries := 0
 	l.seqNum++
-	buf = make([]byte, len(b)+1)
-	buf[0] = l.seqNum
-	copy(buf[1:], b[:])
+	l.buf.Reset()
+	err := l.buf.WriteByte(byte(l.seqNum))
+	if err != nil {
+		return 0, err // zero because we didn't send anything on the network
+	}
+	written, err := l.buf.Write(b)
+	if written != len(b) || err != nil {
+		return 0, err
+	}
 
-	for !success && tries <= maxTries {
+	for tries <= maxTries {
 		tries++
-		read, err := l.conn.Write(buf)
-		if read != len(buf) {
-			return fmt.Errorf("could not send as single packet")
+		written, err = l.conn.Write(l.buf.Bytes())
+		if written != len(b)+1 {
+			return written, fmt.Errorf("could not send as single packet")
 		}
 
 		if err == nil {
 			// Try waiting for ACK
 			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
+			success := false
 			for !success {
 				read, err := l.conn.Read(ackBuf[:])
-				if err != nil && err.(*net.OpError).Timeout() {
-					return fmt.Errorf("no ack received %q err: %s", ackBuf, err)
+				if err != nil {
+					return written, fmt.Errorf("no ack received %q err: %s", ackBuf, err)
 				}
 
 				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-					return fmt.Errorf("Ack broken: %q", ackBuf[:])
+					return written, fmt.Errorf("Ack broken: %q", ackBuf[:])
 				}
 
-				// We just ignore/drop non matching ACKs they are old
+				// We ignore non matching acks and are done for matching ones
 				if ackBuf[3] == l.seqNum {
 					success = true
 					err = nil
@@ -56,7 +61,7 @@ func (l *ReliableUDPTransport) SendReliable(b []uint8) error {
 		}
 
 	}
-	return err
+	return written, err
 }
 
 func (l *ReliableUDPTransport) Close() error {
