@@ -231,7 +231,6 @@ func deviceFromConfig(config configMap) (name string, id string, device lampbase
 			log.Fatal("Couldn't create UdpStripeLamp", err)
 		}
 		device = udpStripeLamp
-
 		break
 	case "udpanalogcolorlamp":
 		udpAnalogColorLamp := lampbase.NewUdpAnalogColorLamp()
