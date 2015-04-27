@@ -2,7 +2,7 @@
 	"listenaddress" : ":8080",
 	"devices":[
 		{
-			"type": "udpanalogcolorlamp",
+			"type": "udpcolorlamp",
 			"devicePort": 0,
 			"lampAddress": "192.168.178.6:8080",
 			"id": "ceiling",

@@ -1,6 +1,7 @@
 package lampbase
 
 import (
+	"bytes"
 	"errors"
 	"net"
 )
@@ -8,26 +9,29 @@ import (
 type UdpPowerDevice struct {
 	trans      *ReliableUDPTransport
 	devicePort uint8
-	buf        []uint8
+	buf        bytes.Buffer
 }
 
 func NewUdpPowerDevice() *UdpPowerDevice {
-	return &UdpPowerDevice{nil, 0, make([]uint8, 3)}
+	return new(UdpPowerDevice)
 }
 
 func (l *UdpPowerDevice) Power(on bool) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.buf[0] = l.devicePort
-	l.buf[1] = 'P'
+	l.buf.Reset()
+	l.buf.WriteByte(byte(l.devicePort))
+	l.buf.WriteByte('P')
+	l.buf.WriteByte(0x00)
+
 	if on {
-		l.buf[2] = 1
+		l.buf.WriteByte(1)
 
 	} else {
-		l.buf[2] = 0
+		l.buf.WriteByte(0)
 	}
-	_, err := l.trans.Write(l.buf[:3])
+	_, err := l.buf.WriteTo(l.trans)
 	return err
 }
 
