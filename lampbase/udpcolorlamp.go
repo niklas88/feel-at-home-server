@@ -1,7 +1,6 @@
 package lampbase
 
 import (
-	"bytes"
 	"errors"
 	"image/color"
 	"time"
@@ -15,11 +14,11 @@ func NewUdpColorLamp() *UdpColorLamp {
 	return new(UdpColorLamp)
 }
 
-func writeColor(buf *bytes.Buffer, col color.Color) {
+func (l *UdpColorLamp) writeColor(col color.Color) {
 	c := color.RGBAModel.Convert(col).(color.RGBA)
-	buf.WriteByte(byte(c.R))
-	buf.WriteByte(byte(c.G))
-	buf.WriteByte(byte(c.B))
+	l.buf.WriteByte(byte(c.R))
+	l.buf.WriteByte(byte(c.G))
+	l.buf.WriteByte(byte(c.B))
 }
 
 func (l *UdpColorLamp) SetColor(col color.Color) error {
@@ -27,7 +26,7 @@ func (l *UdpColorLamp) SetColor(col color.Color) error {
 		return errors.New("Not Dialed")
 	}
 	l.UdpDimLamp.writeHead('C', 0x00)
-	writeColor(&l.buf, col)
+	l.writeColor(col)
 	_, err := l.buf.WriteTo(l.trans)
 	return err
 }
@@ -38,7 +37,7 @@ func (l *UdpColorLamp) Colorfade(delay time.Duration, col color.Color) error {
 	}
 	l.UdpDimLamp.writeHead('C', 0x01)
 	l.UdpDimLamp.writeDurationMilliseconds(delay)
-	writeColor(&l.buf, col)
+	l.writeColor(col)
 	_, err := l.buf.WriteTo(l.trans)
 	return err
 }
