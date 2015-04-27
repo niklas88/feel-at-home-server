@@ -40,7 +40,7 @@ func (l *UdpStripeLamp) SetColor(col color.Color) error {
 	if err == nil {
 		for _, stripe := range l.stripes {
 			for i := range stripe {
-				stripe[i] = *col.(*color.RGBA)
+				stripe[i] = col.(color.RGBA)
 			}
 		}
 	}
@@ -56,10 +56,7 @@ func (l *UdpStripeLamp) UpdateAll() error {
 		return errors.New("Not Dialed")
 
 	}
-	l.buf.Reset()
-	l.buf.WriteByte(byte(l.devicePort))
-	l.buf.WriteByte('S')
-	l.buf.WriteByte(0x03)
+	l.UdpColorLamp.writeHead('S', 0x03)
 	for i, s := range l.stripes {
 		if i%2 == 0 {
 			for j := 0; j < len(s); j++ {
