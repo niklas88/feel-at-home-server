@@ -17,19 +17,16 @@ type ReliableUDPTransport struct {
 
 func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 	var (
-		ackBuf [4]byte
+		ackBuf  [4]byte
+		written int
+		err     error
 	)
 	tries := 0
 	l.seqNum++
 	l.buf.Reset()
-	err := l.buf.WriteByte(byte(l.seqNum))
-	if err != nil {
-		return 0, err // zero because we didn't send anything on the network
-	}
-	written, err := l.buf.Write(b)
-	if written != len(b) || err != nil {
-		return 0, err
-	}
+	// Note that bytes.Buffer's Write() always returns nil errors
+	l.buf.WriteByte(byte(l.seqNum))
+	l.buf.Write(b)
 
 	for tries <= maxTries {
 		tries++
@@ -37,6 +34,7 @@ func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 		if written != len(b)+1 {
 			return written, fmt.Errorf("could not send as single packet")
 		}
+		written -= 1 // the seqNum is not part of the data written by the user
 
 		if err == nil {
 			// Try waiting for ACK
