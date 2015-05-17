@@ -31,7 +31,7 @@ func (l *UdpColorLamp) SetColor(col color.Color) error {
 	return err
 }
 
-func (l *UdpColorLamp) Colorfade(delay time.Duration, col color.Color) error {
+func (l *UdpColorLamp) ColorFade(delay time.Duration, col color.Color) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
