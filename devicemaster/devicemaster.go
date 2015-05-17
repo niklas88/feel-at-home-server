@@ -48,9 +48,8 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 		Device:        dev,
 		controller:    effect.NewController(dev)}
 	d.devices = append(d.devices, newDeviceInfo)
-
-	go newDeviceInfo.controller.Run()
 	d.deviceMap[id] = newDeviceInfo
+	go newDeviceInfo.controller.Run()	
 }
 
 func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Config) error {

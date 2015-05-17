@@ -4,7 +4,6 @@ import (
 	"lamp/effect"
 	"lamp/lampbase"
 	"log"
-	"math"
 	"time"
 )
 
@@ -13,8 +12,6 @@ type WhitefadeConfig struct {
 }
 
 type Whitefade struct {
-	current uint8
-	upward  bool
 	lamp    lampbase.DimLamp
 	delay   time.Duration
 }
@@ -29,7 +26,7 @@ func init() {
 }
 
 func NewWhitefadeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Whitefade{0, true, l, 15 * time.Millisecond}
+	return &Whitefade{l, 15 * time.Millisecond}
 }
 
 func (w *Whitefade) Configure(conf effect.Config) {
@@ -45,16 +42,7 @@ func (w *Whitefade) Configure(conf effect.Config) {
 
 func (w *Whitefade) Apply() (time.Duration, error) {
 
-	err := w.lamp.SetBrightness(uint8((math.Pow(float64(w.current)/255, 2.5)+float64(w.current)/255)/2* 255))
-	if w.upward {
-		w.current++
-	} else {
-		w.current--
-	}
-
-	if w.current == 255 || w.current == 0 {
-		w.upward = !w.upward
-	}
-	return w.delay, err
+	err := w.lamp.Fade(w.delay, 255)
+	return -1, err
 
 }

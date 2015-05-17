@@ -26,12 +26,8 @@ type ColorLamp interface {
 
 type StripeLamp interface {
 	ColorLamp
-	Stripes() []Stripe
-	UpdateAll() error
 	Rainbow(delay time.Duration) error
 	RandomPixelBrightness(delay time.Duration) error
 	RandomPixelWhiteFade(delay time.Duration) error
 	RandomPixelColor(delay time.Duration) error
 }
-
-type Stripe []color.RGBA

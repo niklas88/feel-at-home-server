@@ -12,7 +12,6 @@ type StrobeConfig struct {
 }
 
 type Strobe struct {
-	on    bool
 	lamp  lampbase.DimLamp
 	delay time.Duration
 }
@@ -29,13 +28,12 @@ func init() {
 }
 
 func NewStrobeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Strobe{false, l, 30 * time.Millisecond}
+	return &Strobe{l, 30 * time.Millisecond}
 }
 
 func (s *Strobe) Configure(conf effect.Config) {
 	strobeConf := conf.(*StrobeConfig)
 	var err error
-
 	s.delay, err = time.ParseDuration(strobeConf.Delay)
 	if err != nil {
 		log.Println(err)
@@ -44,14 +42,6 @@ func (s *Strobe) Configure(conf effect.Config) {
 }
 
 func (s *Strobe) Apply() (time.Duration, error) {
-	var brightness uint8
-	s.on = !s.on
-	if s.on {
-		brightness = 255
-	} else {
-		brightness = 0
-	}
-	err := s.lamp.SetBrightness(brightness)
-
-	return s.delay, err
+	err := s.lamp.Stroboscope(s.delay)
+	return -1, err
 }

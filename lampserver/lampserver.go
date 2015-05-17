@@ -9,7 +9,6 @@ import (
 	"lamp/effect"
 	_ "lamp/effect/brightness"
 	_ "lamp/effect/colorfade"
-	_ "lamp/effect/fire"
 	_ "lamp/effect/static"
 	_ "lamp/effect/strobe"
 	_ "lamp/effect/sunrise"

@@ -1,7 +1,6 @@
 package wheel
 
 import (
-	"image/color"
 	"lamp/effect"
 	"lamp/lampbase"
 	"log"
@@ -13,22 +12,8 @@ type WheelConfig struct {
 }
 
 type WheelAll struct {
-	wheelPos uint32
-	forward  bool
 	lamp     lampbase.ColorLamp
 	delay    time.Duration
-}
-
-func wheelColor(w uint8) (uint8, uint8, uint8) {
-	if w < 85 {
-		return w * 3, 255 - w*3, 0
-	} else if w < 170 {
-		w -= 85
-		return 255 - w*3, 0, w * 3
-	}
-	w -= 170
-	return 0, w * 3, 255 - w*3
-
 }
 
 func init() {
@@ -41,7 +26,7 @@ func init() {
 }
 
 func NewWheelAllEffect(l lampbase.ColorLamp) effect.Effect {
-	return &WheelAll{0, false, l, 30 * time.Millisecond}
+	return &WheelAll{l, 30 * time.Millisecond}
 }
 
 func (f *WheelAll) Configure(conf effect.Config) {
@@ -56,17 +41,6 @@ func (f *WheelAll) Configure(conf effect.Config) {
 }
 
 func (w *WheelAll) Apply() (time.Duration, error) {
-	var c color.RGBA
-	c.R, c.G, c.B = wheelColor(uint8(w.wheelPos))
-	if w.wheelPos <= 0 || w.wheelPos >= 255 {
-		w.forward = !w.forward
-	}
-
-	if w.forward {
-		w.wheelPos++
-	} else {
-		w.wheelPos--
-	}
-	err := w.lamp.SetColor(&c)
-	return w.delay, err
+	err := w.lamp.ColorWheel(w.delay)
+	return -1, err
 }

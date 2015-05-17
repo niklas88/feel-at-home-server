@@ -4,7 +4,6 @@ import (
 	"errors"
 	"math"
 	"time"
-	"log"
 )
 
 type UdpDimLamp struct {
@@ -31,7 +30,6 @@ func (l *UdpDimLamp) writeDurationMilliseconds(delay time.Duration) {
 		delayMilli = math.MaxUint32
 	}
 	delaySmall := uint32(delayMilli)
-	log.Println("Delay: ", delaySmall)
 	l.buf.WriteByte(byte(delaySmall >> 24))
 	l.buf.WriteByte(byte((delaySmall >> 16) & 0xff))
 	l.buf.WriteByte(byte((delaySmall >> 8) & 0xff))
