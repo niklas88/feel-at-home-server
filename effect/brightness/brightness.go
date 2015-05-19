@@ -1,18 +1,13 @@
 package brightness
 
 import (
+	"errors"
 	"lamp/effect"
 	"lamp/lampbase"
-	"time"
 )
 
 type BrightnessConfig struct {
 	Brightness uint8
-}
-
-type BrightnessEffect struct {
-	brightness uint8
-	lamp       lampbase.DimLamp
 }
 
 func init() {
@@ -23,19 +18,13 @@ func init() {
 		ConfigFactory: func() effect.Config {
 			return &BrightnessConfig{255}
 		},
-		Factory: effect.DimLampEffectFactory(NewBrightnessEffect)})
+		Effect: effect.DimLampEffect(BrightnessEffect)})
 }
 
-func NewBrightnessEffect(l lampbase.DimLamp) effect.Effect {
-	return &BrightnessEffect{lamp: l}
-}
-
-func (b *BrightnessEffect) Configure(c effect.Config) {
-	config := c.(*BrightnessConfig)
-	b.brightness = config.Brightness
-}
-
-func (b *BrightnessEffect) Apply() (time.Duration, error) {
-	err := b.lamp.SetBrightness(b.brightness)
-	return -1, err
+func BrightnessEffect(l lampbase.DimLamp, config effect.Config) error {
+	c, ok := config.(*BrightnessConfig)
+	if !ok {
+		return errors.New("Not a BrightnessConfig")
+	}
+	return l.SetBrightness(c.Brightness)
 }

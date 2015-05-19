@@ -1,20 +1,15 @@
 package static
 
 import (
+	"errors"
 	"github.com/pwaller/go-hexcolor"
 	"image/color"
 	"lamp/effect"
 	"lamp/lampbase"
-	"time"
 )
 
 type StaticConfig struct {
 	Color hexcolor.Hex
-}
-
-type StaticEffect struct {
-	color color.RGBA
-	lamp  lampbase.ColorLamp
 }
 
 func init() {
@@ -25,20 +20,14 @@ func init() {
 		ConfigFactory: func() effect.Config {
 			return &StaticConfig{"#ffffff"}
 		},
-		Factory: effect.ColorLampEffectFactory(NewStaticEffect)})
+		Effect: effect.ColorLampEffect(StaticEffect)})
 }
 
-func NewStaticEffect(l lampbase.ColorLamp) effect.Effect {
-	return &StaticEffect{lamp: l}
-}
-
-func (s *StaticEffect) Configure(c effect.Config) {
-	config := c.(*StaticConfig)
+func StaticEffect(l lampbase.ColorLamp, c effect.Config) error {
+	config, ok := c.(*StaticConfig)
+	if !ok {
+		return errors.New("Not a StaticConfig")
+	}
 	m := color.RGBAModel
-	s.color = m.Convert(config.Color).(color.RGBA)
-}
-
-func (s *StaticEffect) Apply() (time.Duration, error) {
-	err := s.lamp.SetColor(s.color)
-	return -1, err
+	return l.SetColor(m.Convert(config.Color).(color.RGBA))
 }

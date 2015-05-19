@@ -2,16 +2,7 @@ package effect
 
 import (
 	"lamp/lampbase"
-	"time"
 )
-
-type Effect interface {
-	Apply() (time.Duration, error)
-}
-
-type Configurer interface {
-	Configure(conf Config)
-}
 
 type Config interface{}
 
@@ -21,7 +12,9 @@ type Info struct {
 	Config      Config
 }
 
-type DeviceEffectFactory func(p lampbase.Device) Effect
-type DimLampEffectFactory func(d lampbase.DimLamp) Effect
-type ColorLampEffectFactory func(c lampbase.ColorLamp) Effect
-type StripeLampEffectFactory func(s lampbase.StripeLamp) Effect
+type Effect interface{}
+
+type DeviceEffect func(p lampbase.Device, config Config) error
+type DimLampEffect func(d lampbase.DimLamp, config Config) error
+type ColorLampEffect func(c lampbase.ColorLamp, config Config) error
+type StripeLampEffect func(s lampbase.StripeLamp, config Config) error

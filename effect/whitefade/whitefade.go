@@ -1,48 +1,35 @@
-package whitefade
+package strobe
 
 import (
+	"errors"
 	"lamp/effect"
 	"lamp/lampbase"
-	"log"
 	"time"
 )
 
-type WhitefadeConfig struct {
+type WhiteFadeConfig struct {
 	Delay string
-}
-
-type Whitefade struct {
-	lamp    lampbase.DimLamp
-	delay   time.Duration
 }
 
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
-			Name:        "Whitefade",
-			Description: "Fades with white color"},
-		ConfigFactory: func() effect.Config { return &WhitefadeConfig{"15ms"} },
-		Factory:       effect.DimLampEffectFactory(NewWhitefadeEffect)})
+			Name:        "White Fade",
+			Description: "White fading effect"},
+		ConfigFactory: func() effect.Config {
+			return &WhiteFadeConfig{"30ms"}
+		},
+		Effect: effect.DimLampEffect(WhiteFadeEffect)})
 }
 
-func NewWhitefadeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Whitefade{l, 15 * time.Millisecond}
-}
-
-func (w *Whitefade) Configure(conf effect.Config) {
-	whitefadeConf := conf.(*WhitefadeConfig)
-	var err error
-
-	w.delay, err = time.ParseDuration(whitefadeConf.Delay)
-	if err != nil {
-		log.Println(err)
-		w.delay = 30 * time.Millisecond
+func WhiteFadeEffect(l lampbase.DimLamp, conf effect.Config) error {
+	strobeConf, ok := conf.(*WhiteFadeConfig)
+	if !ok {
+		return errors.New("Not a WhiteFadeConfig")
 	}
-}
-
-func (w *Whitefade) Apply() (time.Duration, error) {
-
-	err := w.lamp.Fade(w.delay, 255)
-	return -1, err
-
+	delay, err := time.ParseDuration(strobeConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.Fade(delay, 255)
 }

@@ -14,26 +14,26 @@ type Registry struct {
 
 type Registration struct {
 	Info          Info
-	Factory       interface{}
+	Effect        Effect
 	ConfigFactory func() Config
 }
 
 func (e *Registration) Compatible(lamp lampbase.Device) bool {
-	switch fac := e.Factory.(type) {
-	case DeviceEffectFactory:
+	switch eff := e.Effect.(type) {
+	case DeviceEffect:
 		_, ok := lamp.(lampbase.Device)
 		return ok
-	case DimLampEffectFactory:
+	case DimLampEffect:
 		_, ok := lamp.(lampbase.DimLamp)
 		return ok
-	case ColorLampEffectFactory:
+	case ColorLampEffect:
 		_, ok := lamp.(lampbase.ColorLamp)
 		return ok
-	case StripeLampEffectFactory:
+	case StripeLampEffect:
 		_, ok := lamp.(lampbase.StripeLamp)
 		return ok
 	default:
-		panic("Unknow lamp factory type " + fmt.Sprint(fac))
+		panic("Unknow effect type " + fmt.Sprintf("%g", eff))
 	}
 }
 
@@ -56,38 +56,29 @@ func (r *Registry) Register(reg *Registration) error {
 	return nil
 }
 
-func (r *Registry) CreateEffect(name string, lamp lampbase.Device) (Effect, *Info) {
+func (r *Registry) ApplyEffect(name string, lamp lampbase.Device, config Config) (error, *Info) {
 	r.RLock()
 	defer r.RUnlock()
 	e, ok := r.r[name]
 	if !ok {
-		return nil, nil
+		return fmt.Errorf("Unknown Effect %s", name), nil
 	}
-	var (
-		eff  Effect
-		info Info
-	)
-	switch fac := e.Factory.(type) {
-	case DeviceEffectFactory:
-		if l, ok := lamp.(lampbase.Device); ok {
-			eff, info = fac(l), e.Info
-		}
-	case DimLampEffectFactory:
-		if l, ok := lamp.(lampbase.DimLamp); ok {
-			eff, info = fac(l), e.Info
-		}
-	case ColorLampEffectFactory:
-		if l, ok := lamp.(lampbase.ColorLamp); ok {
-			eff, info = fac(l), e.Info
-		}
-	case StripeLampEffectFactory:
-		if l, ok := lamp.(lampbase.StripeLamp); ok {
-			eff, info = fac(l), e.Info
-		}
+
+	var err error
+
+	switch eff := e.Effect.(type) {
+	case DeviceEffect:
+		err = eff(lamp, config)
+	case DimLampEffect:
+		err = eff(lamp.(lampbase.DimLamp), config)
+	case ColorLampEffect:
+		err = eff(lamp.(lampbase.ColorLamp), config)
+	case StripeLampEffect:
+		err = eff(lamp.(lampbase.StripeLamp), config)
 	default:
-		panic("Unknow lamp factory type")
+		panic("Unknow effect type " + fmt.Sprint(eff))
 	}
-	return eff, &info
+	return err, &e.Info
 }
 
 func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {

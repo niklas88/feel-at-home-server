@@ -1,19 +1,14 @@
 package strobe
 
 import (
+	"errors"
 	"lamp/effect"
 	"lamp/lampbase"
-	"log"
 	"time"
 )
 
 type StrobeConfig struct {
 	Delay string
-}
-
-type Strobe struct {
-	lamp  lampbase.DimLamp
-	delay time.Duration
 }
 
 func init() {
@@ -24,24 +19,17 @@ func init() {
 		ConfigFactory: func() effect.Config {
 			return &StrobeConfig{"30ms"}
 		},
-		Factory: effect.DimLampEffectFactory(NewStrobeEffect)})
+		Effect: effect.DimLampEffect(StrobeEffect)})
 }
 
-func NewStrobeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Strobe{l, 30 * time.Millisecond}
-}
-
-func (s *Strobe) Configure(conf effect.Config) {
-	strobeConf := conf.(*StrobeConfig)
-	var err error
-	s.delay, err = time.ParseDuration(strobeConf.Delay)
-	if err != nil {
-		log.Println(err)
-		s.delay = 30 * time.Millisecond
+func StrobeEffect(l lampbase.DimLamp, conf effect.Config) error {
+	strobeConf, ok := conf.(*StrobeConfig)
+	if !ok {
+		return errors.New("Not a StrobeConfig")
 	}
-}
-
-func (s *Strobe) Apply() (time.Duration, error) {
-	err := s.lamp.Stroboscope(s.delay)
-	return -1, err
+	delay, err := time.ParseDuration(strobeConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.Stroboscope(delay)
 }

@@ -4,7 +4,6 @@ import (
 	"errors"
 	"lamp/effect"
 	"lamp/lampbase"
-	"log"
 	"sync"
 )
 
@@ -20,7 +19,6 @@ type DeviceInfo struct {
 	Active        bool
 	CurrentEffect *effect.Info    `json:"-"`
 	Device        lampbase.Device `json:"-"`
-	controller    *effect.Controller
 }
 
 type DeviceMaster struct {
@@ -45,11 +43,9 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
 		CurrentEffect: nil,
-		Device:        dev,
-		controller:    effect.NewController(dev)}
+		Device:        dev}
 	d.devices = append(d.devices, newDeviceInfo)
 	d.deviceMap[id] = newDeviceInfo
-	go newDeviceInfo.controller.Run()	
 }
 
 func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Config) error {
@@ -60,18 +56,13 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 		return errors.New("Unknown device " + deviceId)
 	}
 
-	eff, info := d.reg.CreateEffect(effectName, dev.Device)
-	if eff == nil {
-		return errors.New("Unknown or incompatible effect")
+	err, info := d.reg.ApplyEffect(effectName, dev.Device, config)
+	if err != nil {
+		return err
 	}
 
-	if c, ok := eff.(effect.Configurer); ok {
-		log.Println("Configuring")
-		c.Configure(config)
-	}
 	info.Config = config
 	dev.CurrentEffect = info
-	dev.controller.EffectChan <- eff
 	dev.Active = true
 	return nil
 }
@@ -84,17 +75,19 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	if !ok {
 		return errors.New("Unknown device " + deviceId)
 	}
+
 	if dev.Active == active {
 		return nil
 	}
+	var err error
 
 	if active {
-		dev.controller.StateChange <- effect.Activate
+		err, _ = d.reg.ApplyEffect(dev.CurrentEffect.Name, dev.Device, dev.CurrentEffect.Config)
 	} else {
-		dev.controller.StateChange <- effect.Deactivate
+		err = dev.Device.Power(active)
 	}
 	dev.Active = active
-	return nil
+	return err
 }
 
 func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
