@@ -11,6 +11,7 @@ const maxTries = 4
 
 type ReliableUDPTransport struct {
 	conn   *net.UDPConn
+	addr   *net.UDPAddr
 	seqNum uint8
 	buf    bytes.Buffer
 }
@@ -30,7 +31,7 @@ func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 
 	for tries <= maxTries {
 		tries++
-		written, err = l.conn.Write(l.buf.Bytes())
+		written, err = l.conn.WriteToUDP(l.buf.Bytes(), l.addr)
 		if written != len(b)+1 {
 			return written, fmt.Errorf("could not send as single packet")
 		}
@@ -41,9 +42,9 @@ func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
 			success := false
 			for !success {
-				read, err := l.conn.Read(ackBuf[:])
+				read, addr, err := l.conn.ReadFrom(ackBuf[:])
 				if err != nil {
-					return written, fmt.Errorf("no ack received %q err: %s", ackBuf, err)
+					return written, fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
 				}
 
 				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
@@ -68,9 +69,9 @@ func (l *ReliableUDPTransport) Close() error {
 
 func DialReliableUDPTransport(laddr, raddr *net.UDPAddr) (l *ReliableUDPTransport, err error) {
 	l = new(ReliableUDPTransport)
-	conn, err := net.DialUDP("udp4", laddr, raddr)
+	l.conn, err = net.ListenUDP("udp4", laddr)
 	if err == nil {
-		l.conn = conn
+		l.addr = raddr
 	}
 	return
 }
