@@ -11,6 +11,7 @@ import (
 	_ "lamp/effect/colorfade"
 	_ "lamp/effect/power"
 	_ "lamp/effect/rainbow"
+	_ "lamp/effect/random"
 	_ "lamp/effect/static"
 	_ "lamp/effect/strobe"
 	_ "lamp/effect/sunrise"
