@@ -7,29 +7,25 @@ import (
 	"time"
 )
 
-type StrobeConfig struct {
-	Delay string
-}
-
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
 			Name:        "Stroboscope",
 			Description: "Stroboscope"},
-		ConfigFactory: func() effect.Config {
-			return &StrobeConfig{"30ms"}
-		},
-		Effect: effect.DimLampEffect(StrobeEffect)})
+		ConfigFactory: effect.DelayConfigFactory,
+		EffectFactory: effect.DimLampEffectFactory(StrobeEffectFactory)})
 }
 
-func StrobeEffect(l lampbase.DimLamp, conf effect.Config) error {
-	strobeConf, ok := conf.(*StrobeConfig)
-	if !ok {
-		return errors.New("Not a StrobeConfig")
-	}
-	delay, err := time.ParseDuration(strobeConf.Delay)
-	if err != nil {
-		return err
-	}
-	return l.Stroboscope(delay)
+func StrobeEffectFactory(l lampbase.DimLamp) effect.Effect {
+	return effect.EffectFunc(func(config effect.Config) error {
+		strobeConf, ok := config.(*effect.DelayConfig)
+		if !ok {
+			return errors.New("Not a StrobeConfig")
+		}
+		delay, err := time.ParseDuration(strobeConf.Delay)
+		if err != nil {
+			return err
+		}
+		return l.Stroboscope(delay)
+	})
 }

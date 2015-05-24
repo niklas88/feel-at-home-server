@@ -14,26 +14,26 @@ type Registry struct {
 
 type Registration struct {
 	Info          Info
-	Effect        Effect
+	EffectFactory interface{}
 	ConfigFactory func() Config
 }
 
 func (e *Registration) Compatible(lamp lampbase.Device) bool {
-	switch eff := e.Effect.(type) {
-	case DeviceEffect:
+	switch fac := e.EffectFactory.(type) {
+	case DeviceEffectFactory:
 		_, ok := lamp.(lampbase.Device)
 		return ok
-	case DimLampEffect:
+	case DimLampEffectFactory:
 		_, ok := lamp.(lampbase.DimLamp)
 		return ok
-	case ColorLampEffect:
+	case ColorLampEffectFactory:
 		_, ok := lamp.(lampbase.ColorLamp)
 		return ok
-	case StripeLampEffect:
+	case StripeLampEffectFactory:
 		_, ok := lamp.(lampbase.StripeLamp)
 		return ok
 	default:
-		panic("Unknow effect type " + fmt.Sprintf("%g", eff))
+		panic("Unknow effect type " + fmt.Sprintf("%g", fac))
 	}
 }
 
@@ -56,29 +56,40 @@ func (r *Registry) Register(reg *Registration) error {
 	return nil
 }
 
-func (r *Registry) ApplyEffect(name string, lamp lampbase.Device, config Config) (error, *Info) {
+func (r *Registry) Effect(name string, device lampbase.Device) Effect {
 	r.RLock()
 	defer r.RUnlock()
 	e, ok := r.r[name]
 	if !ok {
-		return fmt.Errorf("Unknown Effect %s", name), nil
+		return nil
 	}
-
-	var err error
-
-	switch eff := e.Effect.(type) {
-	case DeviceEffect:
-		err = eff(lamp, config)
-	case DimLampEffect:
-		err = eff(lamp.(lampbase.DimLamp), config)
-	case ColorLampEffect:
-		err = eff(lamp.(lampbase.ColorLamp), config)
-	case StripeLampEffect:
-		err = eff(lamp.(lampbase.StripeLamp), config)
+	var eff Effect
+	switch fac := e.EffectFactory.(type) {
+	case DeviceEffectFactory:
+		eff = fac(device)
+	case DimLampEffectFactory:
+		d, ok := device.(lampbase.DimLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
+	case ColorLampEffectFactory:
+		d, ok := device.(lampbase.ColorLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
+	case StripeLampEffectFactory:
+		d, ok := device.(lampbase.StripeLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
 	default:
-		panic("Unknow effect type " + fmt.Sprint(eff))
+		panic("Unknow effect factory type " + fmt.Sprintf("%q", eff))
 	}
-	return err, &e.Info
+
+	return eff
 }
 
 func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
@@ -93,24 +104,24 @@ func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
 	return compatibles
 }
 
-func (r *Registry) Info(name string) (*Info, bool) {
+func (r *Registry) Info(name string) *Info {
 	r.RLock()
 	defer r.RUnlock()
 	v, ok := r.r[name]
 	if !ok {
-		return nil, false
+		return nil
 	}
 	info := v.Info
 	info.Config = v.ConfigFactory()
-	return &info, true
+	return &info
 }
 
-func (r *Registry) Config(name string) (Config, bool) {
+func (r *Registry) Config(name string) Config {
 	r.RLock()
 	defer r.RUnlock()
 	v, ok := r.r[name]
 	if !ok {
-		return nil, false
+		return nil
 	}
-	return v.ConfigFactory(), true
+	return v.ConfigFactory()
 }

@@ -2,6 +2,7 @@ package devicemaster
 
 import (
 	"errors"
+	"fmt"
 	"lamp/effect"
 	"lamp/lampbase"
 	"sync"
@@ -40,9 +41,13 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	if _, ok := d.deviceMap[id]; ok {
 		panic("Readded device " + id)
 	}
+
+	powerInfo := d.reg.Info("Power")
+
 	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
-		CurrentEffect: nil,
+		CurrentEffect: powerInfo,
+		Active:        false,
 		Device:        dev}
 	d.devices = append(d.devices, newDeviceInfo)
 	d.deviceMap[id] = newDeviceInfo
@@ -56,11 +61,16 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 		return errors.New("Unknown device " + deviceId)
 	}
 
-	err, info := d.reg.ApplyEffect(effectName, dev.Device, config)
+	eff := d.reg.Effect(effectName, dev.Device)
+	if eff == nil {
+		return fmt.Errorf("Incompatible effect %v for lamp type %v", effectName, dev.Device)
+	}
+	err := eff.Apply(config)
 	if err != nil {
 		return err
 	}
 
+	info := d.reg.Info(effectName)
 	info.Config = config
 	dev.CurrentEffect = info
 	dev.Active = true
@@ -82,7 +92,8 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	var err error
 
 	if active {
-		err, _ = d.reg.ApplyEffect(dev.CurrentEffect.Name, dev.Device, dev.CurrentEffect.Config)
+		eff := d.reg.Effect(dev.CurrentEffect.Name, dev.Device)
+		err = eff.Apply(dev.CurrentEffect.Config)
 	} else {
 		err = dev.Device.Power(active)
 	}

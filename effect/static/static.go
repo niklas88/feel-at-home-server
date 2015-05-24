@@ -20,14 +20,16 @@ func init() {
 		ConfigFactory: func() effect.Config {
 			return &StaticConfig{"#ffffff"}
 		},
-		Effect: effect.ColorLampEffect(StaticEffect)})
+		EffectFactory: effect.ColorLampEffectFactory(StaticEffectFactory)})
 }
 
-func StaticEffect(l lampbase.ColorLamp, c effect.Config) error {
-	config, ok := c.(*StaticConfig)
-	if !ok {
-		return errors.New("Not a StaticConfig")
-	}
-	m := color.RGBAModel
-	return l.SetColor(m.Convert(config.Color).(color.RGBA))
+func StaticEffectFactory(l lampbase.ColorLamp) effect.Effect {
+	return effect.EffectFunc(func(config effect.Config) error {
+		conf, ok := config.(*StaticConfig)
+		if !ok {
+			return errors.New("Not a StaticConfig")
+		}
+		m := color.RGBAModel
+		return l.SetColor(m.Convert(conf.Color).(color.RGBA))
+	})
 }

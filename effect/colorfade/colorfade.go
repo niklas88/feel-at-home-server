@@ -20,20 +20,22 @@ func init() {
 			Name:        "Colorfade",
 			Description: "Fades with Color"},
 		ConfigFactory: func() effect.Config { return &ColorfadeConfig{"#ffffff", "15ms"} },
-		Effect:        effect.ColorLampEffect(ColorFadeEffect)})
+		EffectFactory: effect.ColorLampEffectFactory(ColorFadeEffect)})
 }
 
-func ColorFadeEffect(l lampbase.ColorLamp, conf effect.Config) error {
-	colorfadeConf, ok := conf.(*ColorfadeConfig)
-	if !ok {
-		return errors.New("Not a ColorFadeConfig")
-	}
+func ColorFadeEffect(l lampbase.ColorLamp) effect.Effect {
+	return effect.EffectFunc(func(config effect.Config) error {
+		colorfadeConf, ok := config.(*ColorfadeConfig)
+		if !ok {
+			return errors.New("Not a ColorFadeConfig")
+		}
 
-	delay, err := time.ParseDuration(colorfadeConf.Delay)
-	if err != nil {
-		return err
-	}
+		delay, err := time.ParseDuration(colorfadeConf.Delay)
+		if err != nil {
+			return err
+		}
 
-	m := color.RGBAModel
-	return l.ColorFade(delay, m.Convert(colorfadeConf.Color).(color.RGBA))
+		m := color.RGBAModel
+		return l.ColorFade(delay, m.Convert(colorfadeConf.Color).(color.RGBA))
+	})
 }

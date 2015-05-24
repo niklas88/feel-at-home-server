@@ -9,6 +9,7 @@ import (
 	"lamp/effect"
 	_ "lamp/effect/brightness"
 	_ "lamp/effect/colorfade"
+	_ "lamp/effect/power"
 	_ "lamp/effect/rainbow"
 	_ "lamp/effect/static"
 	_ "lamp/effect/strobe"
@@ -113,8 +114,8 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "darn fuck it", 400)
 		return
 	}
-	config, ok := effect.DefaultRegistry.Config(put.Name)
-	if !ok {
+	config := effect.DefaultRegistry.Config(put.Name)
+	if config == nil {
 		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return

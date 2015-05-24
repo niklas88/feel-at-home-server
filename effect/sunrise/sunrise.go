@@ -16,19 +16,21 @@ func init() {
 		Info: effect.Info{
 			Name:        "Sunrise",
 			Description: "A sunrise effect for color lamps"},
-		ConfigFactory: func() effect.Config { return &SunriseConfig{"30ms"} },
-		Effect:        effect.ColorLampEffect(SunriseEffect)})
+		ConfigFactory: effect.DelayConfigFactory,
+		EffectFactory: effect.ColorLampEffectFactory(SunriseEffectFactory)})
 }
 
-func SunriseEffect(l lampbase.ColorLamp, conf effect.Config) error {
-	sunriseConf, ok := conf.(*SunriseConfig)
-	if !ok {
-		return errors.New("Not a SunriseConfig")
-	}
+func SunriseEffectFactory(l lampbase.ColorLamp) effect.Effect {
+	return effect.EffectFunc(func(config effect.Config) error {
+		sunriseConf, ok := config.(*effect.DelayConfig)
+		if !ok {
+			return errors.New("Not a SunriseConfig")
+		}
 
-	delay, err := time.ParseDuration(sunriseConf.Delay)
-	if err != nil {
-		return err
-	}
-	return l.Sunrise(delay)
+		delay, err := time.ParseDuration(sunriseConf.Delay)
+		if err != nil {
+			return err
+		}
+		return l.Sunrise(delay)
+	})
 }
