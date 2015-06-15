@@ -10,7 +10,7 @@ license=('GPL')
 #makedepends=('go')
 options=('!strip' '!emptydirs')
 backup=('etc/lampserver/config.json')
-source=("$pkgname.service" "$pkgname.socket" "lampgit::git+ssh://vcs@frickel.club/home/vcs/lampserver.git")
+source=("$pkgname.service" "$pkgname.socket" "lampgit::git+ssh://vcs@frickel.club/home/vcs/lampserver.git#branch=noeffect")
 
 build() {
   # "self contained build" for people who don't have GOPATH set:
