@@ -1,4 +1,4 @@
-package brightness
+package brightnessscaling
 
 import (
 	"errors"
@@ -13,20 +13,20 @@ type BrightnessConfig struct {
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
-			Name:        "Brightness",
-			Description: "Set brightness for your lamp"},
+			Name:        "Brightness Scaling",
+			Description: "Set brightness scaling for your lamp"},
 		ConfigFactory: func() effect.Config {
 			return &BrightnessConfig{255}
 		},
-		EffectFactory: effect.DimLampEffectFactory(BrightnessEffectFactory)})
+		EffectFactory: effect.DimLampEffectFactory(BrightnessScalingEffectFactory)})
 }
 
-func BrightnessEffectFactory(l lampbase.DimLamp) effect.Effect {
+func BrightnessScalingEffectFactory(l lampbase.DimLamp) effect.Effect {
 	return effect.EffectFunc(func(config effect.Config) error {
 		c, ok := config.(*BrightnessConfig)
 		if !ok {
 			return errors.New("Not a BrightnessConfig")
 		}
-		return l.Brightness(c.Brightness)
+		return l.BrightnessScaling(c.Brightness)
 	})
 }

@@ -32,6 +32,12 @@ func (e *Registration) Compatible(lamp lampbase.Device) bool {
 	case StripeLampEffectFactory:
 		_, ok := lamp.(lampbase.StripeLamp)
 		return ok
+	case MatrixLampEffectFactory:
+		_, ok := lamp.(lampbase.MatrixLamp)
+		return ok
+	case WordClockEffectFactory:
+		_, ok := lamp.(lampbase.WordClock)
+		return ok
 	default:
 		panic("Unknow effect type " + fmt.Sprintf("%g", fac))
 	}
@@ -81,6 +87,18 @@ func (r *Registry) Effect(name string, device lampbase.Device) Effect {
 		eff = fac(d)
 	case StripeLampEffectFactory:
 		d, ok := device.(lampbase.StripeLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
+	case MatrixLampEffectFactory:
+		d, ok := device.(lampbase.MatrixLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
+	case WordClockEffectFactory:
+		d, ok := device.(lampbase.WordClock)
 		if !ok {
 			return nil
 		}

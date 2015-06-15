@@ -14,11 +14,21 @@ func NewUdpDimLamp() *UdpDimLamp {
 	return new(UdpDimLamp)
 }
 
-func (l *UdpDimLamp) SetBrightness(b uint8) error {
+func (l *UdpDimLamp) Brightness(b uint8) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
 	l.UdpPowerDevice.writeHead('D', 0x00)
+	l.buf.WriteByte(byte(b))
+	_, err := l.buf.WriteTo(l.trans)
+	return err
+}
+
+func (l *UdpDimLamp) BrightnessScaling(b uint8) error {
+	if l.trans == nil {
+		return errors.New("Not Dialed")
+	}
+	l.UdpPowerDevice.writeHead('D', 0x03)
 	l.buf.WriteByte(byte(b))
 	_, err := l.buf.WriteTo(l.trans)
 	return err

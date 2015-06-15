@@ -1,4 +1,4 @@
-package static
+package color
 
 import (
 	"errors"
@@ -8,28 +8,28 @@ import (
 	"lamp/lampbase"
 )
 
-type StaticConfig struct {
+type ColorConfig struct {
 	Color hexcolor.Hex
 }
 
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
-			Name:        "Static",
+			Name:        "Color",
 			Description: "Set a static color for your color lamp"},
 		ConfigFactory: func() effect.Config {
-			return &StaticConfig{"#ffffff"}
+			return &ColorConfig{"#ffffff"}
 		},
-		EffectFactory: effect.ColorLampEffectFactory(StaticEffectFactory)})
+		EffectFactory: effect.ColorLampEffectFactory(ColorEffectFactory)})
 }
 
-func StaticEffectFactory(l lampbase.ColorLamp) effect.Effect {
+func ColorEffectFactory(l lampbase.ColorLamp) effect.Effect {
 	return effect.EffectFunc(func(config effect.Config) error {
-		conf, ok := config.(*StaticConfig)
+		conf, ok := config.(*ColorConfig)
 		if !ok {
-			return errors.New("Not a StaticConfig")
+			return errors.New("Not a ColorConfig")
 		}
 		m := color.RGBAModel
-		return l.SetColor(m.Convert(conf.Color).(color.RGBA))
+		return l.Color(m.Convert(conf.Color).(color.RGBA))
 	})
 }

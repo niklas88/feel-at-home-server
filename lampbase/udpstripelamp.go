@@ -9,7 +9,7 @@ type UdpStripeLamp struct {
 	UdpColorLamp
 }
 
-func NewUdpStripeLamp(numStripes, ledsPerStripe int) *UdpStripeLamp {
+func NewUdpStripeLamp() *UdpStripeLamp {
 	lamp := new(UdpStripeLamp)
 	return lamp
 }

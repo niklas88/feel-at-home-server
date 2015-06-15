@@ -6,12 +6,18 @@ import (
 
 type Config interface{}
 
+type EmptyConfig struct{}
+
 type DelayConfig struct {
 	Delay string
 }
 
 func DelayConfigFactory() Config {
 	return &DelayConfig{"30ms"}
+}
+
+func EmptyConfigFactory() Config {
+	return &EmptyConfig{}
 }
 
 type Info struct {
@@ -34,3 +40,5 @@ type DeviceEffectFactory func(p lampbase.Device) Effect
 type DimLampEffectFactory func(d lampbase.DimLamp) Effect
 type ColorLampEffectFactory func(c lampbase.ColorLamp) Effect
 type StripeLampEffectFactory func(s lampbase.StripeLamp) Effect
+type MatrixLampEffectFactory func(s lampbase.MatrixLamp) Effect
+type WordClockEffectFactory func(s lampbase.WordClock) Effect

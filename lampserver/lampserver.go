@@ -8,11 +8,13 @@ import (
 	"lamp/devicemaster"
 	"lamp/effect"
 	_ "lamp/effect/brightness"
+	_ "lamp/effect/brightnessscaling"
+	_ "lamp/effect/clock"
+	_ "lamp/effect/color"
 	_ "lamp/effect/colorfade"
 	_ "lamp/effect/power"
 	_ "lamp/effect/rainbow"
 	_ "lamp/effect/random"
-	_ "lamp/effect/static"
 	_ "lamp/effect/strobe"
 	_ "lamp/effect/sunrise"
 	_ "lamp/effect/wheel"
@@ -22,6 +24,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 var (
@@ -223,11 +226,29 @@ func deviceFromConfig(config configMap) (name string, id string, device lampbase
 	}
 
 	switch typeName {
+	case "udpwordclock":
+		timeUpdateInterval, err := time.ParseDuration(config.ensureNonEmptyString("timeUpdateInterval"))
+		if err != nil {
+			timeUpdateInterval = 1 * time.Minute
+		}
+		udpWordClock := lampbase.NewUdpWordClock(timeUpdateInterval)
+		if err = udpWordClock.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpWordClock", err)
+		}
+		device = udpWordClock
+		break
+	case "udpmatrixlamp":
+		udpMatrix := lampbase.NewUdpMatrixLamp()
+		if err = udpMatrix.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpMatrix", err)
+		}
+		device = udpMatrix
+		break
 	case "udpstripelamp":
-		lampStripes := config.ensureNumeric("lampStripes")
-		lampLedsPerStripe := config.ensureNumeric("lampLedsPerStripe")
+		//lampStripes := config.ensureNumeric("lampStripes")
+		//lampLedsPerStripe := config.ensureNumeric("lampLedsPerStripe")
 
-		udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
+		udpStripeLamp := lampbase.NewUdpStripeLamp()
 		if err = udpStripeLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
 			log.Fatal("Couldn't create UdpStripeLamp", err)
 		}

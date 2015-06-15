@@ -21,7 +21,7 @@ func (l *UdpColorLamp) writeColor(col color.Color) {
 	l.buf.WriteByte(byte(c.B))
 }
 
-func (l *UdpColorLamp) SetColor(col color.Color) error {
+func (l *UdpColorLamp) Color(col color.Color) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}

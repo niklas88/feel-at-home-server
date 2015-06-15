@@ -1,63 +1,73 @@
 {
-	"listenaddress" : ":8080",
-	"devices":[
-		{
-			"type": "udpcolorlamp",
-			"devicePort": 0,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "ceiling",
-			"name": "Ceiling Lamp"
-		},
-		{
-			"type": "udpdimlamp",
-			"devicePort": 1,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "pc",
-			"name": "PC Lamp"
-		},
-		{
-			"type": "udpdimlamp",
-			"devicePort": 2,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "bedside",
-			"name": "Bedside Lamp"
-		},
-		{
-			"type": "udpstripelamp",
-			"devicePort": 3,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "big",
-			"name": "Big Lamp",
-			"lampStripes" : 4,
-			"lampLedsPerStripe" : 16
-		},
-		{
-			"type": "udppowerdevice",
-			"devicePort": 4,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "screen",
-			"name": "Screen Switch"
-		},
-		{
-			"type": "udppowerdevice",
-			"devicePort": 5,
-			"lampAddress": "192.168.178.6:8080",
-			"id": "audiosystem",
-			"name": "Audio System"
-		},
-                {
-                        "type": "udppowerdevice",
-                        "devicePort": 6,
-                        "lampAddress": "192.168.178.6:8080",
-                        "id": "powerstrip",
-                        "name": "Power Strip"
-                },
-		{
-                        "type": "udppowerdevice",
-                        "devicePort": 7,
-                        "lampAddress": "192.168.178.6:8080",
-                        "id": "mainlamp",
-                        "name": "Main Lamp"
-                }
-	]
+  "listenaddress": ":8080",
+  "devices": [
+    {
+      "type": "udpcolorlamp",
+      "devicePort": 0,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "ceiling",
+      "name": "Ceiling Lamp"
+    },
+    {
+      "type": "udpdimlamp",
+      "devicePort": 1,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "pc",
+      "name": "PC Lamp"
+    },
+    {
+      "type": "udpdimlamp",
+      "devicePort": 2,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "bedside",
+      "name": "Bedside Lamp"
+    },
+    {
+      "type": "udpstripelamp",
+      "devicePort": 3,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "big",
+      "name": "Big Lamp",
+      "lampStripes": 4,
+      "lampLedsPerStripe": 16
+    },
+    {
+      "type": "udppowerdevice",
+      "devicePort": 4,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "screen",
+      "name": "Screen Switch"
+    },
+    {
+      "type": "udppowerdevice",
+      "devicePort": 5,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "audiosystem",
+      "name": "Audio System"
+    },
+    {
+      "type": "udppowerdevice",
+      "devicePort": 6,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "powerstrip",
+      "name": "Power Strip"
+    },
+    {
+      "type": "udppowerdevice",
+      "devicePort": 7,
+      "lampAddress": "192.168.178.6:8080",
+      "id": "mainlamp",
+      "name": "Main Lamp"
+    },
+    {
+      "type": "udpwordclock",
+      "devicePort": 0,
+      "lampAddress": "192.168.178.178:8888",
+      "id": "wordclock",
+      "name": "Word Clock",
+      "timeUpdateInterval": "10minutes",
+      "lampStripes": 4,
+      "lampLedsPerStripe": 26
+    }
+  ]
 }
