@@ -9,19 +9,18 @@ import (
 
 type UdpWordClock struct {
 	UdpMatrixLamp
-	timeUpdateInterval time.Duration
+	updateInterval time.Duration
 }
 
 func NewUdpWordClock(timeUpdateInterval time.Duration) *UdpWordClock {
-	lamp := new(UdpWordClock)
-	return lamp
+	return &UdpWordClock{updateInterval: timeUpdateInterval}
 }
 
 func (l *UdpWordClock) Dial(laddr, raddr *net.UDPAddr, lampNum uint8) error {
 	err := l.UdpPowerDevice.Dial(laddr, raddr, lampNum)
 	if err == nil {
 		go func() {
-			c := time.Tick(l.timeUpdateInterval)
+			c := time.Tick(l.updateInterval)
 			for now := range c {
 				if l.trans != nil {
 					l.TimeUpdate(now)
