@@ -62,12 +62,14 @@ func (l *UdpWordClock) TimeUpdate(t time.Time) error {
 
 func (l *UdpDimLamp) writeTime(t time.Time) {
 	unix := t.Unix()
-	l.buf.WriteByte(byte(unix >> 56))
-	l.buf.WriteByte(byte((unix >> 48) & 0xff))
-	l.buf.WriteByte(byte((unix >> 40) & 0xff))
-	l.buf.WriteByte(byte((unix >> 32) & 0xff))
-	l.buf.WriteByte(byte((unix >> 24) & 0xff))
-	l.buf.WriteByte(byte((unix >> 16) & 0xff))
-	l.buf.WriteByte(byte((unix >> 8) & 0xff))
-	l.buf.WriteByte(byte(unix & 0xff))
+	_, offset := t.Zone()
+	local := unix + int64(offset)
+	l.buf.WriteByte(byte(local >> 56))
+	l.buf.WriteByte(byte((local >> 48) & 0xff))
+	l.buf.WriteByte(byte((local >> 40) & 0xff))
+	l.buf.WriteByte(byte((local >> 32) & 0xff))
+	l.buf.WriteByte(byte((local >> 24) & 0xff))
+	l.buf.WriteByte(byte((local >> 16) & 0xff))
+	l.buf.WriteByte(byte((local >> 8) & 0xff))
+	l.buf.WriteByte(byte(local & 0xff))
 }
