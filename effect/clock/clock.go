@@ -1,4 +1,4 @@
-package sunrise
+package clock
 
 import (
 	"errors"
