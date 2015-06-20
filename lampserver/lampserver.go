@@ -12,6 +12,7 @@ import (
 	_ "lamp/effect/clock"
 	_ "lamp/effect/color"
 	_ "lamp/effect/colorfade"
+	_ "lamp/effect/heart"
 	_ "lamp/effect/power"
 	_ "lamp/effect/rainbow"
 	_ "lamp/effect/random"
