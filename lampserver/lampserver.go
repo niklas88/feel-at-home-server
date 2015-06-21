@@ -37,9 +37,21 @@ var (
 	dm             *devicemaster.DeviceMaster
 )
 
-type Result struct {
+type StatusResult struct {
 	Status string
 	Error  string
+}
+
+func writeStatusResult(w http.ResponseWriter, err error) {
+	var resp []byte
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+		resp, _ = json.Marshal(&StatusResult{Status: "error", Error: err.Error()})
+	} else {
+		resp, _ = json.Marshal(&StatusResult{Status: "success", Error: ""})
+	}
+	w.Write(resp)
 }
 
 func init() {
@@ -139,14 +151,8 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	resp, _ := json.Marshal(&Result{"success", ""})
 	err = dm.SetEffect(deviceId, put.Name, config)
-	if err != nil {
-		log.Print(err)
-		w.WriteHeader(http.StatusBadRequest)
-		resp, _ = json.Marshal(&Result{Status: "error", Error: err.Error()})
-	}
-	w.Write(resp)
+	writeStatusResult(w, err)
 }
 
 type ActivePut struct {
@@ -172,13 +178,7 @@ func ActivePutHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	err = dm.SetActive(deviceId, put.Active)
-	resp, _ := json.Marshal(&Result{"success", ""})
-	if err != nil {
-		log.Print(err)
-		w.WriteHeader(http.StatusBadRequest)
-		resp, _ = json.Marshal(&Result{Status: "error", Error: err.Error()})
-	}
-	w.Write(resp)
+	writeStatusResult(w, err)
 }
 
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {

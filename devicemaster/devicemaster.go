@@ -63,7 +63,7 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 
 	eff := d.reg.Effect(effectName, dev.Device)
 	if eff == nil {
-		return fmt.Errorf("Incompatible effect %v for lamp type %v", effectName, dev.Device)
+		return fmt.Errorf("Incompatible effect %v for lamp type %T", effectName, dev.Device)
 	}
 	err := eff.Apply(config)
 	if err != nil {
