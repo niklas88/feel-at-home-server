@@ -37,6 +37,11 @@ var (
 	dm             *devicemaster.DeviceMaster
 )
 
+type Result struct {
+	Status string
+	Error  string
+}
+
 func init() {
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
 	flag.StringVar(&configFileName, "configfilename", "config.json", "Filepath of the configfile")
@@ -66,7 +71,7 @@ func DeviceHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
@@ -85,7 +90,7 @@ func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device.CurrentEffect)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
@@ -116,7 +121,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(put)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	config := effect.DefaultRegistry.Config(put.Name)
@@ -129,12 +134,19 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		err = json.Unmarshal(put.Config, config)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "darn fuck it config broken", 400)
+			http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
 			return
 		}
 	}
-	dm.SetEffect(deviceId, put.Name, config)
-	w.Write([]byte{})
+
+	resp, _ := json.Marshal(&Result{"success", ""})
+	err = dm.SetEffect(deviceId, put.Name, config)
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+		resp, _ = json.Marshal(&Result{Status: "error", Error: err.Error()})
+	}
+	w.Write(resp)
 }
 
 type ActivePut struct {
@@ -156,11 +168,17 @@ func ActivePutHandler(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(put)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
-	dm.SetActive(deviceId, put.Active)
-	w.Write([]byte{})
+	err = dm.SetActive(deviceId, put.Active)
+	resp, _ := json.Marshal(&Result{"success", ""})
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+		resp, _ = json.Marshal(&Result{Status: "error", Error: err.Error()})
+	}
+	w.Write(resp)
 }
 
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
@@ -177,7 +195,7 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(effectList)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
