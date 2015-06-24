@@ -40,22 +40,15 @@ func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 		if err == nil {
 			// Try waiting for ACK
 			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
-			success := false
-			for !success {
-				read, addr, err := l.conn.ReadFrom(ackBuf[:])
-				if err != nil {
-					return written, fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
-				}
-
-				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-					return written, fmt.Errorf("Ack broken: %q", ackBuf[:])
-				}
-
-				// We ignore non matching acks and are done for matching ones
-				if ackBuf[3] == l.seqNum {
-					success = true
-					err = nil
-				}
+			read, addr, err := l.conn.ReadFrom(ackBuf[:])
+			if err != nil {
+				err = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
+			}
+			if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
+				err = fmt.Errorf("Ack broken: %q", ackBuf[:])
+			} else 	if ackBuf[3] == l.seqNum { // We ignore non matching acks and are done for matching ones
+				err = nil
+				break;
 			}
 		}
 
