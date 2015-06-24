@@ -16,13 +16,13 @@ type ReliableUDPTransport struct {
 	buf    bytes.Buffer
 }
 
-func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
+func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 	var (
-		ackBuf  [4]byte
-		written int
-		err     error
+		ackBuf [4]byte
+		err    error
 	)
 	tries := 0
+	lastError = nil
 	l.seqNum++
 	l.buf.Reset()
 	// Note that bytes.Buffer's Write() always returns nil errors
@@ -32,28 +32,38 @@ func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
 	for tries <= maxTries {
 		tries++
 		written, err = l.conn.WriteToUDP(l.buf.Bytes(), l.addr)
+		if err != nil {
+			lastError = err
+			continue
+		}
+
 		if written != len(b)+1 {
-			return written, fmt.Errorf("could not send as single packet")
+			lastError = fmt.Errorf("could not send as single packet")
+			continue
 		}
 		written -= 1 // the seqNum is not part of the data written by the user
 
-		if err == nil {
-			// Try waiting for ACK
-			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
-			read, addr, err := l.conn.ReadFrom(ackBuf[:])
-			if err != nil {
-				err = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
-			}
-			if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-				err = fmt.Errorf("Ack broken: %q", ackBuf[:])
-			} else 	if ackBuf[3] == l.seqNum { // We ignore non matching acks and are done for matching ones
-				err = nil
-				break;
-			}
+		// Try waiting for ACK
+		l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
+		read, addr, err := l.conn.ReadFrom(ackBuf[:])
+		if err != nil {
+			lastError = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
+			continue
+		}
+
+		if read < 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
+			lastError = fmt.Errorf("Ack broken: %q", ackBuf[:])
+			continue
+		}
+
+		// Note that if the seqNum doesn't match we retry
+		if ackBuf[3] == l.seqNum {
+			lastError = nil
+			break
 		}
 
 	}
-	return written, err
+	return written, lastError
 }
 
 func (l *ReliableUDPTransport) Close() error {
