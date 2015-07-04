@@ -9,33 +9,32 @@ import (
 type UdpPowerDevice struct {
 	trans   *ReliableUDPTransport
 	lampNum uint8
-	buf     bytes.Buffer
 }
 
 func NewUdpPowerDevice() *UdpPowerDevice {
 	return new(UdpPowerDevice)
 }
 
-func (l *UdpPowerDevice) writeHead(effectGroup, effectNum byte) {
-	l.buf.Reset()
-	l.buf.WriteByte(byte(l.lampNum))
-	l.buf.WriteByte(effectGroup)
-	l.buf.WriteByte(effectNum)
+func (l *UdpPowerDevice) writeHead(effectGroup, effectNum byte, buf *bytes.Buffer) {
+	buf.WriteByte(byte(l.lampNum))
+	buf.WriteByte(effectGroup)
+	buf.WriteByte(effectNum)
 }
 
 func (l *UdpPowerDevice) Power(on bool) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.writeHead('P', 0x00)
+	var buf bytes.Buffer
+	l.writeHead('P', 0x00, &buf)
 
 	if on {
-		l.buf.WriteByte(1)
+		buf.WriteByte(1)
 
 	} else {
-		l.buf.WriteByte(0)
+		buf.WriteByte(0)
 	}
-	_, err := l.buf.WriteTo(l.trans)
+	_, err := buf.WriteTo(l.trans)
 	return err
 }
 

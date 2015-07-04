@@ -13,25 +13,24 @@ type ReliableUDPTransport struct {
 	conn   *net.UDPConn
 	addr   *net.UDPAddr
 	seqNum uint8
-	buf    bytes.Buffer
 }
 
 func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 	var (
 		ackBuf [4]byte
 		err    error
+		buf    bytes.Buffer
 	)
 	tries := 0
 	lastError = nil
 	l.seqNum++
-	l.buf.Reset()
 	// Note that bytes.Buffer's Write() always returns nil errors
-	l.buf.WriteByte(byte(l.seqNum))
-	l.buf.Write(b)
+	buf.WriteByte(byte(l.seqNum))
+	buf.Write(b)
 
 	for tries <= maxTries {
 		tries++
-		written, err = l.conn.WriteToUDP(l.buf.Bytes(), l.addr)
+		written, err = l.conn.WriteToUDP(buf.Bytes(), l.addr)
 		if err != nil {
 			lastError = err
 			continue

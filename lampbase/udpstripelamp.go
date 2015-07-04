@@ -1,6 +1,7 @@
 package lampbase
 
 import (
+	"bytes"
 	"errors"
 	"time"
 )
@@ -18,9 +19,10 @@ func (l *UdpStripeLamp) RandomPixelBrightness(delay time.Duration) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.UdpColorLamp.writeHead('S', 0x00)
-	l.UdpColorLamp.writeDurationMilliseconds(delay)
-	_, err := l.buf.WriteTo(l.trans)
+	var buf bytes.Buffer
+	l.UdpColorLamp.writeHead('S', 0x00, &buf)
+	l.UdpColorLamp.writeDurationMilliseconds(delay, &buf)
+	_, err := buf.WriteTo(l.trans)
 	return err
 }
 
@@ -28,9 +30,10 @@ func (l *UdpStripeLamp) RandomPixelWhiteFade(delay time.Duration) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.UdpColorLamp.writeHead('S', 0x01)
-	l.UdpColorLamp.writeDurationMilliseconds(delay)
-	_, err := l.buf.WriteTo(l.trans)
+	var buf bytes.Buffer
+	l.UdpColorLamp.writeHead('S', 0x01, &buf)
+	l.UdpColorLamp.writeDurationMilliseconds(delay, &buf)
+	_, err := buf.WriteTo(l.trans)
 	return err
 }
 
@@ -38,9 +41,10 @@ func (l *UdpStripeLamp) RandomPixelColor(delay time.Duration) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.UdpColorLamp.writeHead('S', 0x02)
-	l.UdpColorLamp.writeDurationMilliseconds(delay)
-	_, err := l.buf.WriteTo(l.trans)
+	var buf bytes.Buffer
+	l.UdpColorLamp.writeHead('S', 0x02, &buf)
+	l.UdpColorLamp.writeDurationMilliseconds(delay, &buf)
+	_, err := buf.WriteTo(l.trans)
 	return err
 }
 
@@ -48,8 +52,9 @@ func (l *UdpStripeLamp) Rainbow(delay time.Duration) error {
 	if l.trans == nil {
 		return errors.New("Not Dialed")
 	}
-	l.UdpColorLamp.writeHead('S', 0x04)
-	l.UdpColorLamp.writeDurationMilliseconds(delay)
-	_, err := l.buf.WriteTo(l.trans)
+	var buf bytes.Buffer
+	l.UdpColorLamp.writeHead('S', 0x04, &buf)
+	l.UdpColorLamp.writeDurationMilliseconds(delay, &buf)
+	_, err := buf.WriteTo(l.trans)
 	return err
 }
