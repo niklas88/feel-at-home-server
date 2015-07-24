@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"log"
 )
 
 const maxTries = 4
@@ -51,6 +52,7 @@ func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 		}
 
 		if read < 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
+			log.Println("Try %d : received  Ack: %q and expected seqNum %q" , read, ackBuf[:], l.seqNum)
 			lastError = fmt.Errorf("Ack broken: %q", ackBuf[:])
 			continue
 		}
