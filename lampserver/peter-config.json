@@ -62,7 +62,7 @@
     {
       "type": "udpwordclock",
       "devicePort": 0,
-      "lampAddress": "192.168.178.20:8080",
+      "lampAddress": "192.168.178.51:8080",
       "id": "wordclock",
       "name": "Word Clock",
       "timeUpdateInterval": "10minutes",
