@@ -47,7 +47,7 @@ func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 		l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
 		read, addr, err := l.conn.ReadFrom(ackBuf[:])
 		if err != nil {
-			lastError = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err.Error())
+			lastError = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
 			continue
 		}
 

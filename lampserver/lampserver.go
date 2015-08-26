@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/coreos/go-systemd/activation"
 	"github.com/gorilla/mux"
 	"lamp/devicemaster"
 	"lamp/effect"
@@ -328,7 +329,13 @@ func main() {
 	// Redirect toplevel requests to the static folder so browsers find index.html
 	r.Path("/").Handler(http.RedirectHandler("/static/", 302))
 
-	l, err := net.Listen("tcp", serverConfig.ListenAddress)
+	files := activation.Files(false)
+	var l net.Listener
+	if len(files) != 1 {
+		l, err = net.Listen("tcp", serverConfig.ListenAddress)
+	} else {
+		l, err = net.FileListener(files[0])
+	}
 
 	if err != nil {
 		log.Fatal("Could not create Listener: ", err)
