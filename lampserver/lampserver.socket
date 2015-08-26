@@ -1,6 +1,0 @@
-[Socket]
-ListenStream=8080
-KeepAlive=true
-
-[Install]
-WantedBy=sockets.target
