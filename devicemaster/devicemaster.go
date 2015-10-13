@@ -2,9 +2,9 @@ package devicemaster
 
 import (
 	"errors"
+	"fmt"
 	"lamp/effect"
 	"lamp/lampbase"
-	"log"
 	"sync"
 )
 
@@ -20,7 +20,6 @@ type DeviceInfo struct {
 	Active        bool
 	CurrentEffect *effect.Info    `json:"-"`
 	Device        lampbase.Device `json:"-"`
-	controller    *effect.Controller
 }
 
 type DeviceMaster struct {
@@ -42,14 +41,15 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	if _, ok := d.deviceMap[id]; ok {
 		panic("Readded device " + id)
 	}
+
+	powerInfo := d.reg.Info("Power")
+
 	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
-		CurrentEffect: nil,
-		Device:        dev,
-		controller:    effect.NewController(dev)}
+		CurrentEffect: powerInfo,
+		Active:        false,
+		Device:        dev}
 	d.devices = append(d.devices, newDeviceInfo)
-
-	go newDeviceInfo.controller.Run()
 	d.deviceMap[id] = newDeviceInfo
 }
 
@@ -61,18 +61,18 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 		return errors.New("Unknown device " + deviceId)
 	}
 
-	eff, info := d.reg.CreateEffect(effectName, dev.Device)
+	eff := d.reg.Effect(effectName, dev.Device)
 	if eff == nil {
-		return errors.New("Unknown or incompatible effect")
+		return fmt.Errorf("Incompatible effect %v for lamp type %T", effectName, dev.Device)
+	}
+	err := eff.Apply(config)
+	if err != nil {
+		return err
 	}
 
-	if c, ok := eff.(effect.Configurer); ok {
-		log.Println("Configuring")
-		c.Configure(config)
-	}
+	info := d.reg.Info(effectName)
 	info.Config = config
 	dev.CurrentEffect = info
-	dev.controller.EffectChan <- eff
 	dev.Active = true
 	return nil
 }
@@ -85,17 +85,20 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	if !ok {
 		return errors.New("Unknown device " + deviceId)
 	}
+
 	if dev.Active == active {
 		return nil
 	}
+	var err error
 
 	if active {
-		dev.controller.StateChange <- effect.Activate
+		eff := d.reg.Effect(dev.CurrentEffect.Name, dev.Device)
+		err = eff.Apply(dev.CurrentEffect.Config)
 	} else {
-		dev.controller.StateChange <- effect.Deactivate
+		err = dev.Device.Power(active)
 	}
 	dev.Active = active
-	return nil
+	return err
 }
 
 func (d *DeviceMaster) DeviceList() []DeviceInfoShort {

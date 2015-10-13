@@ -14,12 +14,12 @@ type Registry struct {
 
 type Registration struct {
 	Info          Info
-	Factory       interface{}
+	EffectFactory interface{}
 	ConfigFactory func() Config
 }
 
 func (e *Registration) Compatible(lamp lampbase.Device) bool {
-	switch fac := e.Factory.(type) {
+	switch fac := e.EffectFactory.(type) {
 	case DeviceEffectFactory:
 		_, ok := lamp.(lampbase.Device)
 		return ok
@@ -32,8 +32,14 @@ func (e *Registration) Compatible(lamp lampbase.Device) bool {
 	case StripeLampEffectFactory:
 		_, ok := lamp.(lampbase.StripeLamp)
 		return ok
+	case MatrixLampEffectFactory:
+		_, ok := lamp.(lampbase.MatrixLamp)
+		return ok
+	case WordClockEffectFactory:
+		_, ok := lamp.(lampbase.WordClock)
+		return ok
 	default:
-		panic("Unknow lamp factory type " + fmt.Sprint(fac))
+		panic("Unknow effect type " + fmt.Sprintf("%g", fac))
 	}
 }
 
@@ -56,38 +62,52 @@ func (r *Registry) Register(reg *Registration) error {
 	return nil
 }
 
-func (r *Registry) CreateEffect(name string, lamp lampbase.Device) (Effect, *Info) {
+func (r *Registry) Effect(name string, device lampbase.Device) Effect {
 	r.RLock()
 	defer r.RUnlock()
 	e, ok := r.r[name]
 	if !ok {
-		return nil, nil
+		return nil
 	}
-	var (
-		eff  Effect
-		info Info
-	)
-	switch fac := e.Factory.(type) {
+	var eff Effect
+	switch fac := e.EffectFactory.(type) {
 	case DeviceEffectFactory:
-		if l, ok := lamp.(lampbase.Device); ok {
-			eff, info = fac(l), e.Info
-		}
+		eff = fac(device)
 	case DimLampEffectFactory:
-		if l, ok := lamp.(lampbase.DimLamp); ok {
-			eff, info = fac(l), e.Info
+		d, ok := device.(lampbase.DimLamp)
+		if !ok {
+			return nil
 		}
+		eff = fac(d)
 	case ColorLampEffectFactory:
-		if l, ok := lamp.(lampbase.ColorLamp); ok {
-			eff, info = fac(l), e.Info
+		d, ok := device.(lampbase.ColorLamp)
+		if !ok {
+			return nil
 		}
+		eff = fac(d)
 	case StripeLampEffectFactory:
-		if l, ok := lamp.(lampbase.StripeLamp); ok {
-			eff, info = fac(l), e.Info
+		d, ok := device.(lampbase.StripeLamp)
+		if !ok {
+			return nil
 		}
+		eff = fac(d)
+	case MatrixLampEffectFactory:
+		d, ok := device.(lampbase.MatrixLamp)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
+	case WordClockEffectFactory:
+		d, ok := device.(lampbase.WordClock)
+		if !ok {
+			return nil
+		}
+		eff = fac(d)
 	default:
-		panic("Unknow lamp factory type")
+		panic("Unknow effect factory type " + fmt.Sprintf("%q", eff))
 	}
-	return eff, &info
+
+	return eff
 }
 
 func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
@@ -102,24 +122,24 @@ func (r *Registry) CompatibleEffects(lamp lampbase.Device) []Info {
 	return compatibles
 }
 
-func (r *Registry) Info(name string) (*Info, bool) {
+func (r *Registry) Info(name string) *Info {
 	r.RLock()
 	defer r.RUnlock()
 	v, ok := r.r[name]
 	if !ok {
-		return nil, false
+		return nil
 	}
 	info := v.Info
 	info.Config = v.ConfigFactory()
-	return &info, true
+	return &info
 }
 
-func (r *Registry) Config(name string) (Config, bool) {
+func (r *Registry) Config(name string) Config {
 	r.RLock()
 	defer r.RUnlock()
 	v, ok := r.r[name]
 	if !ok {
-		return nil, false
+		return nil
 	}
-	return v.ConfigFactory(), true
+	return v.ConfigFactory()
 }

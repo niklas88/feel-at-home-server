@@ -8,19 +8,23 @@ import (
 	"lamp/devicemaster"
 	"lamp/effect"
 	_ "lamp/effect/brightness"
+	_ "lamp/effect/brightnessscaling"
+	_ "lamp/effect/clock"
+	_ "lamp/effect/color"
 	_ "lamp/effect/colorfade"
-	_ "lamp/effect/fire"
-	_ "lamp/effect/static"
+	_ "lamp/effect/heart"
+	_ "lamp/effect/power"
+	_ "lamp/effect/rainbow"
+	_ "lamp/effect/random"
 	_ "lamp/effect/strobe"
 	_ "lamp/effect/sunrise"
-	_ "lamp/effect/wheel"
-	_ "lamp/effect/wheel2"
 	_ "lamp/effect/whitefade"
 	"lamp/lampbase"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"time"
 )
 
 var (
@@ -31,6 +35,23 @@ var (
 	serverConfig   ServerConfig
 	dm             *devicemaster.DeviceMaster
 )
+
+type StatusResult struct {
+	Status string
+	Error  string
+}
+
+func writeStatusResult(w http.ResponseWriter, err error) {
+	var resp []byte
+	if err != nil {
+		log.Print(err)
+		w.WriteHeader(http.StatusBadRequest)
+		resp, _ = json.Marshal(&StatusResult{Status: "error", Error: err.Error()})
+	} else {
+		resp, _ = json.Marshal(&StatusResult{Status: "success", Error: ""})
+	}
+	w.Write(resp)
+}
 
 func init() {
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
@@ -61,7 +82,7 @@ func DeviceHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
@@ -80,7 +101,7 @@ func EffectGetHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(device.CurrentEffect)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
@@ -111,11 +132,11 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(put)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
-	config, ok := effect.DefaultRegistry.Config(put.Name)
-	if !ok {
+	config := effect.DefaultRegistry.Config(put.Name)
+	if config == nil {
 		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
 		return
@@ -124,12 +145,13 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		err = json.Unmarshal(put.Config, config)
 		if err != nil {
 			log.Println(err)
-			http.Error(w, "darn fuck it config broken", 400)
+			http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
 			return
 		}
 	}
-	dm.SetEffect(deviceId, put.Name, config)
-	w.Write([]byte{})
+
+	err = dm.SetEffect(deviceId, put.Name, config)
+	writeStatusResult(w, err)
 }
 
 type ActivePut struct {
@@ -151,11 +173,11 @@ func ActivePutHandler(w http.ResponseWriter, req *http.Request) {
 	err := decoder.Decode(put)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
-	dm.SetActive(deviceId, put.Active)
-	w.Write([]byte{})
+	err = dm.SetActive(deviceId, put.Active)
+	writeStatusResult(w, err)
 }
 
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
@@ -172,7 +194,7 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	out, err := json.Marshal(effectList)
 	if err != nil {
 		log.Println(err)
-		http.Error(w, "darn fuck it", 400)
+		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
 	w.Write(out)
@@ -222,11 +244,29 @@ func deviceFromConfig(config configMap) (name string, id string, device lampbase
 	}
 
 	switch typeName {
+	case "udpwordclock":
+		timeUpdateInterval, err := time.ParseDuration(config.ensureNonEmptyString("timeUpdateInterval"))
+		if err != nil {
+			timeUpdateInterval = 1 * time.Minute
+		}
+		udpWordClock := lampbase.NewUdpWordClock(timeUpdateInterval)
+		if err = udpWordClock.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpWordClock", err)
+		}
+		device = udpWordClock
+		break
+	case "udpmatrixlamp":
+		udpMatrix := lampbase.NewUdpMatrixLamp()
+		if err = udpMatrix.Dial(nil, addr, uint8(devicePort)); err != nil {
+			log.Fatal("Couldn't create UdpMatrix", err)
+		}
+		device = udpMatrix
+		break
 	case "udpstripelamp":
-		lampStripes := config.ensureNumeric("lampStripes")
-		lampLedsPerStripe := config.ensureNumeric("lampLedsPerStripe")
+		//lampStripes := config.ensureNumeric("lampStripes")
+		//lampLedsPerStripe := config.ensureNumeric("lampLedsPerStripe")
 
-		udpStripeLamp := lampbase.NewUdpStripeLamp(int(lampStripes), int(lampLedsPerStripe))
+		udpStripeLamp := lampbase.NewUdpStripeLamp()
 		if err = udpStripeLamp.Dial(nil, addr, uint8(devicePort)); err != nil {
 			log.Fatal("Couldn't create UdpStripeLamp", err)
 		}

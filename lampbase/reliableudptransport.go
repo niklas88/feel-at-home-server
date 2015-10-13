@@ -5,61 +5,66 @@ import (
 	"fmt"
 	"net"
 	"time"
+	"log"
 )
 
 const maxTries = 4
 
 type ReliableUDPTransport struct {
 	conn   *net.UDPConn
+	addr   *net.UDPAddr
 	seqNum uint8
-	buf    bytes.Buffer
 }
 
-func (l *ReliableUDPTransport) Write(b []byte) (int, error) {
+func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 	var (
-		ackBuf  [4]byte
-		written int
-		err     error
+		ackBuf [4]byte
+		err    error
+		buf    bytes.Buffer
 	)
 	tries := 0
+	lastError = nil
 	l.seqNum++
-	l.buf.Reset()
 	// Note that bytes.Buffer's Write() always returns nil errors
-	l.buf.WriteByte(byte(l.seqNum))
-	l.buf.Write(b)
+	buf.WriteByte(byte(l.seqNum))
+	buf.Write(b)
 
 	for tries <= maxTries {
 		tries++
-		written, err = l.conn.Write(l.buf.Bytes())
+		written, err = l.conn.WriteToUDP(buf.Bytes(), l.addr)
+		if err != nil {
+			lastError = err
+			continue
+		}
+
 		if written != len(b)+1 {
-			return written, fmt.Errorf("could not send as single packet")
+			lastError = fmt.Errorf("could not send as single packet")
+			continue
 		}
 		written -= 1 // the seqNum is not part of the data written by the user
 
-		if err == nil {
-			// Try waiting for ACK
-			l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
-			success := false
-			for !success {
-				read, err := l.conn.Read(ackBuf[:])
-				if err != nil {
-					return written, fmt.Errorf("no ack received %q err: %s", ackBuf, err)
-				}
+		// Try waiting for ACK
+		l.conn.SetReadDeadline(time.Now().Add(600 * time.Millisecond))
+		read, addr, err := l.conn.ReadFrom(ackBuf[:])
+		if err != nil {
+			lastError = fmt.Errorf("no ack received %q from %q err: %s", ackBuf, addr, err)
+			continue
+		}
 
-				if read != 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-					return written, fmt.Errorf("Ack broken: %q", ackBuf[:])
-				}
+		if read < 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
+			log.Println("Try %d : received  Ack: %q and expected seqNum %q" , read, ackBuf[:], l.seqNum)
+			lastError = fmt.Errorf("Ack broken: %q", ackBuf[:])
+			continue
+		}
 
-				// We ignore non matching acks and are done for matching ones
-				if ackBuf[3] == l.seqNum {
-					success = true
-					err = nil
-				}
-			}
+		// Note that if the seqNum doesn't match we retry
+		if ackBuf[3] == l.seqNum {
+			lastError = nil
+			break
 		}
 
 	}
-	return written, err
+	return written, lastError
 }
 
 func (l *ReliableUDPTransport) Close() error {
@@ -68,9 +73,9 @@ func (l *ReliableUDPTransport) Close() error {
 
 func DialReliableUDPTransport(laddr, raddr *net.UDPAddr) (l *ReliableUDPTransport, err error) {
 	l = new(ReliableUDPTransport)
-	conn, err := net.DialUDP("udp4", laddr, raddr)
+	l.conn, err = net.ListenUDP("udp4", laddr)
 	if err == nil {
-		l.conn = conn
+		l.addr = raddr
 	}
 	return
 }

@@ -1,4 +1,4 @@
-package sunrise
+package rainbow
 
 import (
 	"errors"
@@ -7,30 +7,26 @@ import (
 	"time"
 )
 
-type SunriseConfig struct {
-	Delay string
-}
-
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
-			Name:        "Sunrise",
-			Description: "A sunrise effect for color lamps"},
+			Name:        "Rainbow",
+			Description: "A rainbow effect for color lamps"},
 		ConfigFactory: effect.DelayConfigFactory,
-		EffectFactory: effect.ColorLampEffectFactory(SunriseEffectFactory)})
+		EffectFactory: effect.StripeLampEffectFactory(RainbowEffectFactory)})
 }
 
-func SunriseEffectFactory(l lampbase.ColorLamp) effect.Effect {
+func RainbowEffectFactory(l lampbase.StripeLamp) effect.Effect {
 	return effect.EffectFunc(func(config effect.Config) error {
 		sunriseConf, ok := config.(*effect.DelayConfig)
 		if !ok {
-			return errors.New("Not a SunriseConfig")
+			return errors.New("Not a RainbowConfig")
 		}
 
 		delay, err := time.ParseDuration(sunriseConf.Delay)
 		if err != nil {
 			return err
 		}
-		return l.Sunrise(delay)
+		return l.Rainbow(delay)
 	})
 }

@@ -1,60 +1,31 @@
 package whitefade
 
 import (
+	"errors"
 	"lamp/effect"
 	"lamp/lampbase"
-	"log"
-	"math"
 	"time"
 )
-
-type WhitefadeConfig struct {
-	Delay string
-}
-
-type Whitefade struct {
-	current uint8
-	upward  bool
-	lamp    lampbase.DimLamp
-	delay   time.Duration
-}
 
 func init() {
 	effect.DefaultRegistry.Register(&effect.Registration{
 		Info: effect.Info{
 			Name:        "Whitefade",
-			Description: "Fades with white color"},
-		ConfigFactory: func() effect.Config { return &WhitefadeConfig{"15ms"} },
-		Factory:       effect.DimLampEffectFactory(NewWhitefadeEffect)})
+			Description: "White fading effect"},
+		ConfigFactory: effect.DelayConfigFactory,
+		EffectFactory: effect.DimLampEffectFactory(NewWhiteFadeEffect)})
 }
 
-func NewWhitefadeEffect(l lampbase.DimLamp) effect.Effect {
-	return &Whitefade{0, true, l, 15 * time.Millisecond}
-}
-
-func (w *Whitefade) Configure(conf effect.Config) {
-	whitefadeConf := conf.(*WhitefadeConfig)
-	var err error
-
-	w.delay, err = time.ParseDuration(whitefadeConf.Delay)
-	if err != nil {
-		log.Println(err)
-		w.delay = 30 * time.Millisecond
-	}
-}
-
-func (w *Whitefade) Apply() (time.Duration, error) {
-
-	err := w.lamp.SetBrightness(uint8((math.Pow(float64(w.current)/255, 2.5)+float64(w.current)/255)/2* 255))
-	if w.upward {
-		w.current++
-	} else {
-		w.current--
-	}
-
-	if w.current == 255 || w.current == 0 {
-		w.upward = !w.upward
-	}
-	return w.delay, err
-
+func NewWhiteFadeEffect(l lampbase.DimLamp) effect.Effect {
+	return effect.EffectFunc(func(config effect.Config) error {
+		strobeConf, ok := config.(*effect.DelayConfig)
+		if !ok {
+			return errors.New("Not a WhiteFadeConfig")
+		}
+		delay, err := time.ParseDuration(strobeConf.Delay)
+		if err != nil {
+			return err
+		}
+		return l.Fade(delay, 255)
+	})
 }
