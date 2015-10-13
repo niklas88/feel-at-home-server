@@ -3,19 +3,23 @@ package lampbase
 import (
 	"bytes"
 	"fmt"
+	"log"
 	"net"
 	"time"
-	"log"
 )
 
 const maxTries = 4
 
+// ReliableUDPTransport implements a UDP based message oriented lowlevel
+// (currently one-way) protocoll by implementing resend of unackowledged
+// messages.
 type ReliableUDPTransport struct {
 	conn   *net.UDPConn
 	addr   *net.UDPAddr
 	seqNum uint8
 }
 
+// Write implements the Writer interface
 func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 	var (
 		ackBuf [4]byte
@@ -52,7 +56,7 @@ func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 		}
 
 		if read < 4 || !bytes.Equal(ackBuf[:3], []byte("ACK")) {
-			log.Println("Try %d : received  Ack: %q and expected seqNum %q" , read, ackBuf[:], l.seqNum)
+			log.Println("Try %d : received  Ack: %q and expected seqNum %q", read, ackBuf[:], l.seqNum)
 			lastError = fmt.Errorf("Ack broken: %q", ackBuf[:])
 			continue
 		}
@@ -67,10 +71,12 @@ func (l *ReliableUDPTransport) Write(b []byte) (written int, lastError error) {
 	return written, lastError
 }
 
+// Close implements the Closer interface
 func (l *ReliableUDPTransport) Close() error {
 	return l.conn.Close()
 }
 
+// DialReliableUDPTransport allows dialing remote UDPAddr
 func DialReliableUDPTransport(laddr, raddr *net.UDPAddr) (l *ReliableUDPTransport, err error) {
 	l = new(ReliableUDPTransport)
 	l.conn, err = net.ListenUDP("udp4", laddr)
