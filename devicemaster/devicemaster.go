@@ -1,3 +1,6 @@
+// Package devicemaster implements a central hub for handling different
+// devices, maintaining metadata of devices and keeping track of currently
+// running effects
 package devicemaster
 
 import (
@@ -8,12 +11,17 @@ import (
 	"sync"
 )
 
+// DeviceInfoShort functions as POD type for storing the most important
+// information on a device such as its name, id and whether it's currently
+// active i.e. running a static or dynamic effect other than being Power()'ed
+// off
 type DeviceInfoShort struct {
 	Name   string
 	Id     string
 	Active bool
 }
 
+// DeviceInfo holds all information maintained for a device under control
 type DeviceInfo struct {
 	Name          string
 	Id            string
@@ -22,6 +30,9 @@ type DeviceInfo struct {
 	Device        lampbase.Device `json:"-"`
 }
 
+// DeviceMaster is the main type of this package through its methods allows
+// controlling devices under its control as well as putting devices under its
+// control
 type DeviceMaster struct {
 	sync.RWMutex
 	deviceMap map[string]*DeviceInfo
@@ -29,12 +40,17 @@ type DeviceMaster struct {
 	reg       effect.Registry
 }
 
+// New creates a new DeviceMaster instance using the provided effect.Registry
+// which maintains available effects and their metadata
 func New(registry effect.Registry) *DeviceMaster {
 	return &DeviceMaster{deviceMap: make(map[string]*DeviceInfo),
 		devices: make([]*DeviceInfo, 0),
 		reg:     registry}
 }
 
+// AddDevice puts a device under the control of this DeviceMaster instance
+// registering it with a name and id. Readding an already added device results
+// in a panic to prevent misuse
 func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	d.Lock()
 	defer d.Unlock()
@@ -53,6 +69,8 @@ func (d *DeviceMaster) AddDevice(name, id string, dev lampbase.Device) {
 	d.deviceMap[id] = newDeviceInfo
 }
 
+// SetEffect makes the effect given by effectName active for the device given
+// by deviceId using the provided effect.Config
 func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Config) error {
 	d.Lock()
 	defer d.Unlock()
@@ -77,6 +95,9 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config effect.Conf
 	return nil
 }
 
+// SetActive activates (active == true) or suspends (active == false) the
+// current effect running on the device given by deviceId. If a device is
+// already in the state being requested this is a no-op
 func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	d.Lock()
 	defer d.Unlock()
@@ -101,6 +122,8 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	return err
 }
 
+// DeviceList returns a list of all devices under the control of this
+// DeviceMaster containing the most important metadata for each device
 func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
 	// Copy for concurrency safety
 	var devList []DeviceInfoShort
@@ -112,6 +135,8 @@ func (d *DeviceMaster) DeviceList() []DeviceInfoShort {
 	return devList
 }
 
+// Device returns detailed information such as the currently active effect for
+// the device given by id
 func (d *DeviceMaster) Device(id string) (DeviceInfo, bool) {
 	d.RLock()
 	defer d.RUnlock()
