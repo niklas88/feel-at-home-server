@@ -30,6 +30,6 @@ func ClockColorEffectFactory(l lampbase.WordClock) effect.Effect {
 			return errors.New("Not a ClockColorConfig")
 		}
 		m := color.RGBAModel
-		return l.Color(m.Convert(conf.Color).(color.RGBA))
+		return l.Color(m.Convert(conf.ClockColor).(color.RGBA))
 	})
 }
