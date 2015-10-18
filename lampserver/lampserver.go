@@ -10,6 +10,7 @@ import (
 	_ "lamp/effect/brightness"
 	_ "lamp/effect/brightnessscaling"
 	_ "lamp/effect/clock"
+	_ "lamp/effect/clockcolor"
 	_ "lamp/effect/color"
 	_ "lamp/effect/colorfade"
 	_ "lamp/effect/heart"
