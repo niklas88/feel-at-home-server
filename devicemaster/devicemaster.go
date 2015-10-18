@@ -37,12 +37,12 @@ type DeviceMaster struct {
 	sync.RWMutex
 	deviceMap map[string]*DeviceInfo
 	devices   []*DeviceInfo
-	reg       effect.Registry
+	reg       *effect.Registry
 }
 
 // New creates a new DeviceMaster instance using the provided effect.Registry
 // which maintains available effects and their metadata
-func New(registry effect.Registry) *DeviceMaster {
+func New(registry *effect.Registry) *DeviceMaster {
 	return &DeviceMaster{deviceMap: make(map[string]*DeviceInfo),
 		devices: make([]*DeviceInfo, 0),
 		reg:     registry}
