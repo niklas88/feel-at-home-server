@@ -1,7 +1,7 @@
 # Maintainer: Niklas Schnelle <niklas@komani.de>
 
 pkgname=lampserver
-pkgver=r230.11116ac
+pkgver=r193.d8da44c
 pkgrel=1
 pkgdesc="Server for lamps"
 arch=('x86_64' 'i686' 'armv6h' 'armv7h')
@@ -10,7 +10,7 @@ license=('GPL')
 #makedepends=('go')
 options=('!strip' '!emptydirs')
 backup=('etc/lampserver/config.json')
-source=("$pkgname.service" "$pkgname.socket" "lampgit::git+ssh://vcs@frickel.club/home/vcs/lampserver.git#branch=noeffect")
+source=("$pkgname.service" "$pkgname.socket" "lampgit::git+https://github.com/niklas88/feel-at-home-server.git")
 
 build() {
   # "self contained build" for people who don't have GOPATH set:
