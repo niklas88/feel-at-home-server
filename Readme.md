@@ -6,3 +6,8 @@ registered with the Feel@Home Server it can be listed and controlled by clients
 via a HTTP+JSON REST-like interface. This software is currently somewhat
 lacking in documentation but we are eager to provide assistance for anyone
 wanting to create Feel@Home Server compatible devices or clients.
+
+For further information on the different parts of Feel@Home, see:
+
+  * [Android Remote](https://github.com/PeterVollmer/feel-at-home-android-client)
+  * [Arduino Devices](https://github.com/PeterVollmer/feel-at-home-arduino-devices)
