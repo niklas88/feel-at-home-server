@@ -18,12 +18,12 @@ func init() {
 
 func RainbowEffectFactory(l lampbase.StripeLamp) effect.Effect {
 	return effect.EffectFunc(func(config effect.Config) error {
-		sunriseConf, ok := config.(*effect.DelayConfig)
+		rainbowConf, ok := config.(*effect.DelayConfig)
 		if !ok {
 			return errors.New("Not a RainbowConfig")
 		}
 
-		delay, err := time.ParseDuration(sunriseConf.Delay)
+		delay, err := time.ParseDuration(rainbowConf.Delay)
 		if err != nil {
 			return err
 		}
