@@ -2,8 +2,8 @@ package random
 
 import (
 	"errors"
-	"lamp/effect"
-	"lamp/lampbase"
+	"github.com/niklas88/feel-at-home-server/effect"
+	"github.com/niklas88/feel-at-home-server/lampbase"
 	"time"
 )
 

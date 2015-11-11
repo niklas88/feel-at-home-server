@@ -3,7 +3,7 @@ package effect
 import (
 	"errors"
 	"fmt"
-	"lamp/lampbase"
+	"github.com/niklas88/feel-at-home-server/lampbase"
 	"sync"
 )
 

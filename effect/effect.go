@@ -4,7 +4,7 @@
 package effect
 
 import (
-	"lamp/lampbase"
+	"github.com/niklas88/feel-at-home-server/lampbase"
 )
 
 // Config is a type used to configure the parameters of a function supported by

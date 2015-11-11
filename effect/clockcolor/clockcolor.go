@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/pwaller/go-hexcolor"
 	"image/color"
-	"lamp/effect"
-	"lamp/lampbase"
+	"github.com/niklas88/feel-at-home-server/effect"
+	"github.com/niklas88/feel-at-home-server/lampbase"
 )
 
 type ClockColorConfig struct {
