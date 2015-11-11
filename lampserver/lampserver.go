@@ -19,6 +19,7 @@ import (
 	_ "github.com/niklas88/feel-at-home-server/effect/random"
 	_ "github.com/niklas88/feel-at-home-server/effect/strobe"
 	_ "github.com/niklas88/feel-at-home-server/effect/sunrise"
+	_ "github.com/niklas88/feel-at-home-server/effect/wheel"
 	_ "github.com/niklas88/feel-at-home-server/effect/whitefade"
 	"github.com/niklas88/feel-at-home-server/lampbase"
 	"log"
