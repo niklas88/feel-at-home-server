@@ -1,11 +1,11 @@
 [Unit]
-Description=Lamp Server
+Description=Feel@Home Server
 Requires=network.target
 After=multi-user.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/lampserver -configfilename=/etc/lampserver/config.json
+ExecStart=/usr/bin/feel-at-home-server -configfilename=/etc/feel-at-home-server/config.json
 User=http
 Restart=always
 

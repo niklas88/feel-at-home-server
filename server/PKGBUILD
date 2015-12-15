@@ -1,9 +1,9 @@
 # Maintainer: Niklas Schnelle <niklas@komani.de>
 
 pkgname=feel-at-home-server
-pkgver=r200.26ac2f4
+pkgver=r201.55f6dfd
 pkgrel=1
-pkgdesc="The home server of the feel-at-home project"
+pkgdesc="The home server of the Feel@Home project"
 arch=('x86_64' 'i686' 'armv6h' 'armv7h')
 #url="http://SERVER/$pkgname/"
 license=('GPL')
@@ -42,6 +42,6 @@ pkgver() {
   printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
 }
 
-md5sums=('ca46c1cc99f101892a8047d66ac249ca'
+md5sums=('b47fafaf77757810c1f55de18290367e'
          '3412c76f0c152ba9abba8a26975fb457'
          'SKIP')
