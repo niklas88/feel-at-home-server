@@ -1,0 +1,47 @@
+# Maintainer: Niklas Schnelle <niklas@komani.de>
+
+pkgname=feel-at-home-server
+pkgver=r198.cf3db50
+pkgrel=1
+pkgdesc="The home server of the feel-at-home project"
+arch=('x86_64' 'i686' 'armv6h' 'armv7h')
+#url="http://SERVER/$pkgname/"
+license=('GPL')
+#makedepends=('go')
+options=('!strip' '!emptydirs')
+backup=('etc/server/config.json')
+source=("$pkgname.service" "$pkgname.socket" "lampgit::git+https://github.com/niklas88/feel-at-home-server.git")
+
+build() {
+  # "self contained build" for people who don't have GOPATH set:
+  # set GOPATH to $srcdir/go
+  # put lampserver git repository in $srcdir/go/src/lamp/lampserver
+  # then go get and go build
+  unset GOROOT
+  export GOPATH="$PWD/go"
+  rm -rf go/src
+  mkdir -p go/src/github.com/niklas88/
+  mv lampgit go/src/github.com/niklas88/feel-at-home-server
+  cd go/src/github.com/niklas88/feel-at-home-server/lampserver
+
+  go get
+  go build
+}
+
+package() {
+  install -Dm655 "$pkgname.service" "$pkgdir/usr/lib/systemd/system/$pkgname.service"
+  install -Dm655 "$pkgname.socket" "$pkgdir/usr/lib/systemd/system/$pkgname.socket"
+
+  cd go/src/github.com/niklas88/feel-at-home-server/server/
+  install -Dm755 "$pkgname" "$pkgdir/usr/bin/$pkgname"
+  install -Dm655 "config.json" "$pkgdir/etc/"$pkgname"/config.json"
+}
+
+pkgver() {
+  cd "$srcdir/lampgit"
+  printf "r%s.%s" "$(git rev-list --count HEAD)" "$(git rev-parse --short HEAD)"
+}
+
+md5sums=('ca46c1cc99f101892a8047d66ac249ca'
+         '3412c76f0c152ba9abba8a26975fb457'
+         'SKIP')
