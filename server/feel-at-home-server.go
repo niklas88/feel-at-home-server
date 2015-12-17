@@ -143,13 +143,11 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	if config != nil {
-		err = json.Unmarshal(put.Config, config)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
-			return
-		}
+	err = json.Unmarshal(put.Config, config)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
+		return
 	}
 
 	err = dm.SetEffect(deviceId, put.Name, config)
