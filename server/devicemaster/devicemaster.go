@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/niklas88/feel-at-home-server/devices"
 	"github.com/niklas88/feel-at-home-server/server/deviceapi"
+	"github.com/niklas88/feel-at-home-server/server/deviceapi/power"
 	"sync"
 )
 
@@ -26,7 +27,7 @@ type DeviceInfo struct {
 	Name          string
 	Id            string
 	Active        bool
-	Config        deviceapi.Config
+	Config        deviceapi.Config `json:"-"`
 	CurrentEffect deviceapi.Effect `json:"-"`
 	Device        devices.Device   `json:"-"`
 }
@@ -59,11 +60,12 @@ func (d *DeviceMaster) AddDevice(name, id string, dev devices.Device) {
 		panic("Readded device " + id)
 	}
 
-	power := d.reg.Effect("Power")
+	powerEffect := d.reg.Effect("Power")
 
 	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
-		CurrentEffect: power,
+		CurrentEffect: powerEffect,
+		Config:        &power.PowerConfig{false},
 		Active:        false,
 		Device:        dev}
 	d.devices = append(d.devices, newDeviceInfo)

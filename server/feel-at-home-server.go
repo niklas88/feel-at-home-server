@@ -57,7 +57,7 @@ func writeStatusResult(w http.ResponseWriter, err error) {
 
 func init() {
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
-	flag.StringVar(&configFileName, "configfilename", "config.json", "Filepath of the configfile")
+	flag.StringVar(&configFileName, "conf", "config.json", "Filepath of the configfile")
 }
 
 func DeviceListHandler(w http.ResponseWriter, req *http.Request) {
@@ -180,6 +180,12 @@ func ActivePutHandler(w http.ResponseWriter, req *http.Request) {
 	writeStatusResult(w, err)
 }
 
+type EffectInfo struct {
+	Name        string
+	Description string
+	Config      deviceapi.Config
+}
+
 func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(req)
@@ -191,7 +197,13 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	effectList := deviceapi.DefaultRegistry.CompatibleEffects(device.Device)
-	out, err := json.Marshal(effectList)
+	effectInfoList := make([]EffectInfo, len(effectList))
+	for i, v := range effectList {
+		effectInfoList[i].Name = v.Name()
+		effectInfoList[i].Description = v.Description()
+		effectInfoList[i].Config = v.DefaultConfig()
+	}
+	out, err := json.Marshal(effectInfoList)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "darn fuck it", http.StatusInternalServerError)
