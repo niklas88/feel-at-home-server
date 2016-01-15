@@ -7,21 +7,18 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Clock",
-			Description: "Set device into clock mode"},
-		ConfigFactory: deviceapi.EmptyConfigFactory,
-		EffectFactory: deviceapi.WordClockEffectFactory(ClockEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewWordClockEffect(
+		"Clock",
+		"Set device into clock mode",
+		ApplyToDevice,
+		func() deviceapi.Config { return &deviceapi.EmptyConfig{} }))
 }
 
-func ClockEffectFactory(l devices.WordClock) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		_, ok := config.(*deviceapi.EmptyConfig)
-		if !ok {
-			return errors.New("Not an empty Config")
-		}
+func ApplyToDevice(l devices.WordClock, config deviceapi.Config) error {
+	_, ok := config.(*deviceapi.EmptyConfig)
+	if !ok {
+		return errors.New("Not an empty Config")
+	}
 
-		return l.Clock()
-	})
+	return l.Clock()
 }

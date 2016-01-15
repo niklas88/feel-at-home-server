@@ -10,23 +10,21 @@ type BrightnessConfig struct {
 	Brightness uint8
 }
 
-func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Brightness",
-			Description: "Set brightness for your lamp"},
-		ConfigFactory: func() deviceapi.Config {
-			return &BrightnessConfig{255}
-		},
-		EffectFactory: deviceapi.DimLampEffectFactory(BrightnessEffectFactory)})
+func applyToDevice(l devices.DimLamp, config deviceapi.Config) error {
+	c, ok := config.(*BrightnessConfig)
+	if !ok {
+		return errors.New("Not a BrightnessConfig")
+	}
+	return l.Brightness(c.Brightness)
 }
 
-func BrightnessEffectFactory(l devices.DimLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		c, ok := config.(*BrightnessConfig)
-		if !ok {
-			return errors.New("Not a BrightnessConfig")
-		}
-		return l.Brightness(c.Brightness)
-	})
+func init() {
+	deviceapi.DefaultRegistry.Register(
+		deviceapi.NewDimLampEffect(
+			"Brightness",
+			"Set brightness for your lamp",
+			applyToDevice,
+			func() deviceapi.Config {
+				return &BrightnessConfig{255}
+			}))
 }

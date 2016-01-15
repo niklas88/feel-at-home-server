@@ -8,24 +8,21 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Whitefade",
-			Description: "White fading deviceapi"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.DimLampEffectFactory(NewWhiteFadeEffect)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewDimLampEffect(
+		"Whitefade",
+		"White fading effect",
+		applyToDevice,
+		func() deviceapi.Config { return &deviceapi.DelayConfig{"10ms"} }))
 }
 
-func NewWhiteFadeEffect(l devices.DimLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		strobeConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a WhiteFadeConfig")
-		}
-		delay, err := time.ParseDuration(strobeConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.Fade(delay, 255)
-	})
+func applyToDevice(l devices.DimLamp, config deviceapi.Config) error {
+	strobeConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a WhiteFadeConfig")
+	}
+	delay, err := time.ParseDuration(strobeConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.Fade(delay, 255)
 }

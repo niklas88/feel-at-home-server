@@ -1,4 +1,4 @@
-package brightnessscaling
+package brightness
 
 import (
 	"errors"
@@ -10,23 +10,21 @@ type BrightnessConfig struct {
 	Brightness uint8
 }
 
-func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Brightness Scaling",
-			Description: "Set brightness scaling for your lamp"},
-		ConfigFactory: func() deviceapi.Config {
-			return &BrightnessConfig{255}
-		},
-		EffectFactory: deviceapi.DimLampEffectFactory(BrightnessScalingEffectFactory)})
+func applyToDevice(l devices.DimLamp, config deviceapi.Config) error {
+	c, ok := config.(*BrightnessConfig)
+	if !ok {
+		return errors.New("Not a BrightnessConfig")
+	}
+	return l.BrightnessScaling(c.Brightness)
 }
 
-func BrightnessScalingEffectFactory(l devices.DimLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		c, ok := config.(*BrightnessConfig)
-		if !ok {
-			return errors.New("Not a BrightnessConfig")
-		}
-		return l.BrightnessScaling(c.Brightness)
-	})
+func init() {
+	deviceapi.DefaultRegistry.Register(
+		deviceapi.NewDimLampEffect(
+			"Brightnessscaling",
+			"Set brightness scaling for your lamp",
+			applyToDevice,
+			func() deviceapi.Config {
+				return &BrightnessConfig{255}
+			}))
 }

@@ -26,8 +26,9 @@ type DeviceInfo struct {
 	Name          string
 	Id            string
 	Active        bool
-	CurrentEffect *deviceapi.Info `json:"-"`
-	Device        devices.Device  `json:"-"`
+	Config        deviceapi.Config
+	CurrentEffect deviceapi.Effect `json:"-"`
+	Device        devices.Device   `json:"-"`
 }
 
 // DeviceMaster is the main type of this package through its methods allows
@@ -58,11 +59,11 @@ func (d *DeviceMaster) AddDevice(name, id string, dev devices.Device) {
 		panic("Readded device " + id)
 	}
 
-	powerInfo := d.reg.Info("Power")
+	power := d.reg.Effect("Power")
 
 	newDeviceInfo := &DeviceInfo{Name: name,
 		Id:            id,
-		CurrentEffect: powerInfo,
+		CurrentEffect: power,
 		Active:        false,
 		Device:        dev}
 	d.devices = append(d.devices, newDeviceInfo)
@@ -79,18 +80,17 @@ func (d *DeviceMaster) SetEffect(deviceId, effectName string, config deviceapi.C
 		return errors.New("Unknown device " + deviceId)
 	}
 
-	eff := d.reg.Effect(effectName, dev.Device)
+	eff := d.reg.Effect(effectName)
 	if eff == nil {
 		return fmt.Errorf("Incompatible effect %v for lamp type %T", effectName, dev.Device)
 	}
-	err := eff.Apply(config)
+	err := eff.Apply(dev.Device, config)
 	if err != nil {
 		return err
 	}
 
-	info := d.reg.Info(effectName)
-	info.Config = config
-	dev.CurrentEffect = info
+	dev.CurrentEffect = eff
+	dev.Config = config
 	dev.Active = true
 	return nil
 }
@@ -113,8 +113,8 @@ func (d *DeviceMaster) SetActive(deviceId string, active bool) error {
 	var err error
 
 	if active {
-		eff := d.reg.Effect(dev.CurrentEffect.Name, dev.Device)
-		err = eff.Apply(dev.CurrentEffect.Config)
+		eff := d.reg.Effect(dev.CurrentEffect.Name())
+		err = eff.Apply(dev.Device, dev.Config)
 	} else {
 		err = dev.Device.Power(active)
 	}

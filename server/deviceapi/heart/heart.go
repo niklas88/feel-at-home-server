@@ -7,21 +7,18 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Heart",
-			Description: "Set device into heart mode"},
-		ConfigFactory: deviceapi.EmptyConfigFactory,
-		EffectFactory: deviceapi.MatrixLampEffectFactory(HeartEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewMatrixLampEffect(
+		"Heart",
+		"Set device into heart mode",
+		applyToDevice,
+		func() deviceapi.Config { return &deviceapi.EmptyConfig{} }))
 }
 
-func HeartEffectFactory(l devices.MatrixLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		_, ok := config.(*deviceapi.EmptyConfig)
-		if !ok {
-			return errors.New("Not an empty Config")
-		}
+func applyToDevice(l devices.MatrixLamp, config deviceapi.Config) error {
+	_, ok := config.(*deviceapi.EmptyConfig)
+	if !ok {
+		return errors.New("Not an empty Config")
+	}
 
-		return l.Heart()
-	})
+	return l.Heart()
 }

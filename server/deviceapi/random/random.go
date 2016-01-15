@@ -8,70 +8,61 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Random Brightness",
-			Description: "Sets random pixels to random brightness"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.StripeLampEffectFactory(NewRandomBrightnessEffect)})
+	configFactory := func() deviceapi.Config { return &deviceapi.DelayConfig{"30ms"} }
+	deviceapi.DefaultRegistry.Register(deviceapi.NewStripeLampEffect(
+		"Random Brightness",
+		"Sets random pixels to randrom brightness",
+		applyRandomBrightness,
+		configFactory))
 
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Random Fade",
-			Description: "Fades randomly selected pixels"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.StripeLampEffectFactory(NewRandomFadeEffect)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewStripeLampEffect(
+		"Random Fade",
+		"Fades randomly selected pixels",
+		applyRandomFade,
+		configFactory))
 
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Random Color",
-			Description: "Sets random pixels to random colors"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.StripeLampEffectFactory(NewRandomColorEffect)})
-
+	deviceapi.DefaultRegistry.Register(deviceapi.NewStripeLampEffect(
+		"Random Color",
+		"Sets random pixels to random colors",
+		applyRandomColor,
+		configFactory))
 }
 
-func NewRandomBrightnessEffect(l devices.StripeLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		sunriseConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a WheelConfig")
-		}
+func applyRandomBrightness(l devices.StripeLamp, config deviceapi.Config) error {
+	sunriseConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a DelayConfig")
+	}
 
-		delay, err := time.ParseDuration(sunriseConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.RandomPixelBrightness(delay)
-	})
+	delay, err := time.ParseDuration(sunriseConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.RandomPixelBrightness(delay)
 }
 
-func NewRandomFadeEffect(l devices.StripeLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		sunriseConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a WheelConfig")
-		}
+func applyRandomFade(l devices.StripeLamp, config deviceapi.Config) error {
+	sunriseConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a DelayConfig")
+	}
 
-		delay, err := time.ParseDuration(sunriseConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.RandomPixelWhiteFade(delay)
-	})
+	delay, err := time.ParseDuration(sunriseConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.RandomPixelWhiteFade(delay)
 }
 
-func NewRandomColorEffect(l devices.StripeLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		sunriseConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a WheelConfig")
-		}
+func applyRandomColor(l devices.StripeLamp, config deviceapi.Config) error {
+	sunriseConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a DelayConfig")
+	}
 
-		delay, err := time.ParseDuration(sunriseConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.RandomPixelColor(delay)
-	})
+	delay, err := time.ParseDuration(sunriseConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.RandomPixelColor(delay)
 }

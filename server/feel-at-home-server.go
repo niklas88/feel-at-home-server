@@ -137,7 +137,7 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, "darn fuck it", http.StatusInternalServerError)
 		return
 	}
-	config := deviceapi.DefaultRegistry.Config(put.Name)
+	config := deviceapi.DefaultRegistry.Effect(put.Name).DefaultConfig()
 	if config == nil {
 		log.Println("Did not find", deviceId)
 		http.NotFound(w, req)
@@ -337,10 +337,10 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatal("Could not create Listener: ", err)
+		log.Fatal("Could not create Listener:", err)
 	}
 
 	if err = http.Serve(l, r); err != nil {
-		log.Fatal("Serve: ", err)
+		log.Fatal("Serve:", err)
 	}
 }

@@ -8,24 +8,21 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Stroboscope",
-			Description: "Stroboscope"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.DimLampEffectFactory(StrobeEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewDimLampEffect(
+		"Stroboscope",
+		"A stroboscope effect",
+		applyToDevice,
+		func() deviceapi.Config { return &deviceapi.DelayConfig{"40ms"} }))
 }
 
-func StrobeEffectFactory(l devices.DimLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		strobeConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a StrobeConfig")
-		}
-		delay, err := time.ParseDuration(strobeConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.Stroboscope(delay)
-	})
+func applyToDevice(l devices.DimLamp, config deviceapi.Config) error {
+	strobeConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a StrobeConfig")
+	}
+	delay, err := time.ParseDuration(strobeConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.Stroboscope(delay)
 }

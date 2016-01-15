@@ -15,27 +15,24 @@ type ColorfadeConfig struct {
 }
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Colorfade",
-			Description: "Fades with Color"},
-		ConfigFactory: func() deviceapi.Config { return &ColorfadeConfig{"#ffffff", "15ms"} },
-		EffectFactory: deviceapi.ColorLampEffectFactory(ColorFadeEffect)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewColorLampEffect(
+		"Colorfade",
+		"Colored fading effect",
+		applyToDevice,
+		func() deviceapi.Config { return &ColorfadeConfig{"#ffffff", "15ms"} }))
 }
 
-func ColorFadeEffect(l devices.ColorLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		colorfadeConf, ok := config.(*ColorfadeConfig)
-		if !ok {
-			return errors.New("Not a ColorFadeConfig")
-		}
+func applyToDevice(l devices.ColorLamp, config deviceapi.Config) error {
+	colorfadeConf, ok := config.(*ColorfadeConfig)
+	if !ok {
+		return errors.New("Not a ColorFadeConfig")
+	}
 
-		delay, err := time.ParseDuration(colorfadeConf.Delay)
-		if err != nil {
-			return err
-		}
+	delay, err := time.ParseDuration(colorfadeConf.Delay)
+	if err != nil {
+		return err
+	}
 
-		m := color.RGBAModel
-		return l.ColorFade(delay, m.Convert(colorfadeConf.Color).(color.RGBA))
-	})
+	m := color.RGBAModel
+	return l.ColorFade(delay, m.Convert(colorfadeConf.Color).(color.RGBA))
 }

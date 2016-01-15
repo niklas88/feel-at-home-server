@@ -13,23 +13,18 @@ type ColorConfig struct {
 }
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Color",
-			Description: "Set a static color for your color lamp"},
-		ConfigFactory: func() deviceapi.Config {
-			return &ColorConfig{"#ffffff"}
-		},
-		EffectFactory: deviceapi.ColorLampEffectFactory(ColorEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewColorLampEffect(
+		"Color",
+		"Set a static color four your lamp",
+		applyToDevice,
+		func() deviceapi.Config { return &ColorConfig{"#ffffff"} }))
 }
 
-func ColorEffectFactory(l devices.ColorLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		conf, ok := config.(*ColorConfig)
-		if !ok {
-			return errors.New("Not a ColorConfig")
-		}
-		m := color.RGBAModel
-		return l.Color(m.Convert(conf.Color).(color.RGBA))
-	})
+func applyToDevice(l devices.ColorLamp, config deviceapi.Config) error {
+	conf, ok := config.(*ColorConfig)
+	if !ok {
+		return errors.New("Not a ColorConfig")
+	}
+	m := color.RGBAModel
+	return l.Color(m.Convert(conf.Color).(color.RGBA))
 }

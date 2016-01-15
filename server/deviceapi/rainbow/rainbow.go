@@ -8,25 +8,22 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Rainbow",
-			Description: "A rainbow deviceapi for color lamps"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.StripeLampEffectFactory(RainbowEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewStripeLampEffect(
+		"Rainbow",
+		"A rainbow effect for stripe lamps",
+		applyToDevice,
+		func() deviceapi.Config { return &deviceapi.DelayConfig{"10ms"} }))
 }
 
-func RainbowEffectFactory(l devices.StripeLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		rainbowConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a RainbowConfig")
-		}
+func applyToDevice(l devices.StripeLamp, config deviceapi.Config) error {
+	rainbowConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a RainbowConfig")
+	}
 
-		delay, err := time.ParseDuration(rainbowConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.Rainbow(delay)
-	})
+	delay, err := time.ParseDuration(rainbowConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.Rainbow(delay)
 }

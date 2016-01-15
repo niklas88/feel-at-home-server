@@ -8,25 +8,22 @@ import (
 )
 
 func init() {
-	deviceapi.DefaultRegistry.Register(&deviceapi.Registration{
-		Info: deviceapi.Info{
-			Name:        "Wheel",
-			Description: "A color chaning deviceapi for color lamps"},
-		ConfigFactory: deviceapi.DelayConfigFactory,
-		EffectFactory: deviceapi.ColorLampEffectFactory(WheelEffectFactory)})
+	deviceapi.DefaultRegistry.Register(deviceapi.NewColorLampEffect(
+		"Wheel",
+		"A color changing effect for color lamps",
+		applyToDevice,
+		func() deviceapi.Config { return &deviceapi.DelayConfig{"10ms"} }))
 }
 
-func WheelEffectFactory(l devices.ColorLamp) deviceapi.Effect {
-	return deviceapi.EffectFunc(func(config deviceapi.Config) error {
-		wheelConf, ok := config.(*deviceapi.DelayConfig)
-		if !ok {
-			return errors.New("Not a WheelConf")
-		}
+func applyToDevice(l devices.ColorLamp, config deviceapi.Config) error {
+	wheelConf, ok := config.(*deviceapi.DelayConfig)
+	if !ok {
+		return errors.New("Not a WheelConf")
+	}
 
-		delay, err := time.ParseDuration(wheelConf.Delay)
-		if err != nil {
-			return err
-		}
-		return l.ColorWheel(delay)
-	})
+	delay, err := time.ParseDuration(wheelConf.Delay)
+	if err != nil {
+		return err
+	}
+	return l.ColorWheel(delay)
 }
