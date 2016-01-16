@@ -56,7 +56,7 @@ func (r *Registry) Effect(name string) Effect {
 // CompatibleEffects returns a slice of all compatible effects for the given
 // device
 func (r *Registry) CompatibleEffects(lamp devices.Device) []Effect {
-	compatibles := make([]Effect, 0, 10)
+	compatibles := make([]Effect, 0, len(r.r))
 	r.RLock()
 	defer r.RUnlock()
 	for _, eff := range r.r {

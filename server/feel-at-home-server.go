@@ -196,12 +196,11 @@ func EffectListHandler(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	effectList := deviceapi.DefaultRegistry.CompatibleEffects(device.Device)
-	effectInfoList := make([]EffectInfo, len(effectList))
-	for i, v := range effectList {
-		effectInfoList[i].Name = v.Name()
-		effectInfoList[i].Description = v.Description()
-		effectInfoList[i].Config = v.DefaultConfig()
+	effectInfoList := make([]EffectInfo, len(device.AvailableEffects))
+	for i, eff := range device.AvailableEffects {
+		effectInfoList[i].Name = eff.Name()
+		effectInfoList[i].Description = eff.Description()
+		effectInfoList[i].Config = eff.DefaultConfig()
 	}
 	out, err := json.Marshal(effectInfoList)
 	if err != nil {

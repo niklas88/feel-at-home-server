@@ -24,12 +24,20 @@ type DeviceInfoShort struct {
 
 // DeviceInfo holds all information maintained for a device under control
 type DeviceInfo struct {
-	Name          string
-	Id            string
-	Active        bool
-	Config        deviceapi.Config `json:"-"`
-	CurrentEffect deviceapi.Effect `json:"-"`
-	Device        devices.Device   `json:"-"`
+	Name             string
+	Id               string
+	Active           bool
+	AvailableEffects []deviceapi.Effect
+	Config           deviceapi.Config `json:"-"`
+	CurrentEffect    deviceapi.Effect `json:"-"`
+	Device           devices.Device   `json:"-"`
+}
+
+type EffectInfo struct {
+	Name        string
+	Description string
+	Config      deviceapi.Config
+	Effect      deviceapi.Effect `json:"-"`
 }
 
 // DeviceMaster is the main type of this package through its methods allows
@@ -59,15 +67,16 @@ func (d *DeviceMaster) AddDevice(name, id string, dev devices.Device) {
 	if _, ok := d.deviceMap[id]; ok {
 		panic("Readded device " + id)
 	}
-
 	powerEffect := d.reg.Effect("Power")
+	effectList := d.reg.CompatibleEffects(dev)
 
 	newDeviceInfo := &DeviceInfo{Name: name,
-		Id:            id,
-		CurrentEffect: powerEffect,
-		Config:        &power.PowerConfig{false},
-		Active:        false,
-		Device:        dev}
+		Id:               id,
+		CurrentEffect:    powerEffect,
+		Config:           &power.PowerConfig{false},
+		Active:           false,
+		AvailableEffects: effectList,
+		Device:           dev}
 	d.devices = append(d.devices, newDeviceInfo)
 	d.deviceMap[id] = newDeviceInfo
 }
