@@ -33,7 +33,6 @@ import (
 var (
 	lampDelay      int
 	listenAddr     string
-	staticServeDir string
 	configFileName string
 	serverConfig   ServerConfig
 	dm             *devicemaster.DeviceMaster
@@ -144,13 +143,11 @@ func EffectPutHandler(w http.ResponseWriter, req *http.Request) {
 		http.NotFound(w, req)
 		return
 	}
-	if config != nil {
-		err = json.Unmarshal(put.Config, config)
-		if err != nil {
-			log.Println(err)
-			http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
-			return
-		}
+	err = json.Unmarshal(put.Config, config)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "darn fuck it config broken", http.StatusInternalServerError)
+		return
 	}
 
 	err = dm.SetEffect(deviceId, put.Name, config)
@@ -327,9 +324,6 @@ func main() {
 	r.HandleFunc("/devices/{id}/effect", EffectPutHandler).Methods("PUT")
 	r.HandleFunc("/devices/{id}/active", ActivePutHandler).Methods("PUT")
 	r.HandleFunc("/devices/{id}/available", EffectListHandler)
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static", http.FileServer(http.Dir(staticServeDir))))
-	// Redirect toplevel requests to the static folder so browsers find index.html
-	r.Path("/").Handler(http.RedirectHandler("/static/", 302))
 
 	files := activation.Files(false)
 	var l net.Listener
