@@ -13,6 +13,7 @@ import (
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/clockcolor"
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/color"
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/colorfade"
+	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/fire"
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/heart"
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/power"
 	_ "github.com/niklas88/feel-at-home-server/server/deviceapi/rainbow"
