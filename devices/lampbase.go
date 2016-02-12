@@ -56,6 +56,8 @@ type ColorLamp interface {
 type StripeLamp interface {
 	// A StripeLamp may set the same color for all its LEDs and may thus act as a ColorLamp
 	ColorLamp
+	// Fire starts a fire like effect 
+	Fire(delay time.Duration, cooling uint8, spark uint8) error
 	// Rainbow starts a rainbow like effect which spreads colors accross its LEDs
 	Rainbow(delay time.Duration) error
 	// RandomPixelBrightness starts an effect utilizing randomly bright but white

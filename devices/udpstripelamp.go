@@ -58,3 +58,16 @@ func (l *UdpStripeLamp) Rainbow(delay time.Duration) error {
 	_, err := buf.WriteTo(l.trans)
 	return err
 }
+
+func (l *UdpStripeLamp) Fire (delay time.Duration, cooling uint8, spark uint8) error {
+	if l.trans == nil {
+		return errors.New("Not Dialed")
+	}
+	var buf bytes.Buffer
+	l.UdpColorLamp.writeHead('S', 0x05, &buf)
+	l.UdpColorLamp.writeDurationMilliseconds(delay, &buf)
+	buf.WriteByte(byte(cooling))
+	buf.WriteByte(byte(spark))
+	_, err := buf.WriteTo(l.trans)
+	return err
+}
