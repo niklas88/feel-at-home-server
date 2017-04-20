@@ -1,5 +1,7 @@
 {
   "listenaddress": ":9090",
+  "username": "peter",
+  "password": "password",
   "devices": [
     {
       "type": "udpcolorlamp",

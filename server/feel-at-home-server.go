@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/subtle"
 	"encoding/json"
 	"flag"
 	"github.com/coreos/go-systemd/activation"
@@ -57,7 +58,37 @@ func writeStatusResult(w http.ResponseWriter, err error) {
 
 func init() {
 	flag.IntVar(&lampDelay, "delay", 25, "Milliseconds between updates")
-	flag.StringVar(&configFileName, "configfilename", "config.json", "Filepath of the configfile")
+	flag.StringVar(&configFileName, "config", "config.json", "Filepath of the configfile")
+}
+
+type BasicAuthConfig struct {
+	Username string
+	Password string
+	Realm    string
+}
+
+// BasicAuth wraps a handler requiring HTTP basic auth for it using the given
+// username and password and the specified realm, which shouldn't contain quotes.
+//
+// Most web browser display a dialog with something like:
+//
+//    The website says: "<realm>"
+//
+func BasicAuth(handler http.HandlerFunc, authconf *BasicAuthConfig) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		user, pass, ok := r.BasicAuth()
+
+		if !ok || subtle.ConstantTimeCompare([]byte(user), []byte(authconf.Username)) != 1 || subtle.ConstantTimeCompare([]byte(pass), []byte(authconf.Password)) != 1 {
+			w.Header().Set("WWW-Authenticate", `Basic realm="`+authconf.Realm+`"`)
+			w.WriteHeader(401)
+			w.Write([]byte("Unauthorised.\n"))
+			return
+		}
+
+		handler(w, r)
+	}
 }
 
 func DeviceListHandler(w http.ResponseWriter, req *http.Request) {
@@ -115,6 +146,8 @@ type EffectPut struct {
 }
 
 type ServerConfig struct {
+	Username      string
+	Password      string
 	ListenAddress string
 	Devices       []map[string]interface{}
 }
@@ -318,12 +351,14 @@ func main() {
 	}
 
 	r := mux.NewRouter()
-	r.HandleFunc("/devices", DeviceListHandler)
-	r.HandleFunc("/devices/{id}", DeviceHandler).Methods("GET")
-	r.HandleFunc("/devices/{id}/effect", EffectGetHandler).Methods("GET")
-	r.HandleFunc("/devices/{id}/effect", EffectPutHandler).Methods("PUT")
-	r.HandleFunc("/devices/{id}/active", ActivePutHandler).Methods("PUT")
-	r.HandleFunc("/devices/{id}/available", EffectListHandler)
+	auth := &BasicAuthConfig{serverConfig.Username, serverConfig.Password, "Feel@Home"}
+
+	r.HandleFunc("/devices", BasicAuth(DeviceListHandler, auth))
+	r.HandleFunc("/devices/{id}", BasicAuth(DeviceHandler, auth)).Methods("GET")
+	r.HandleFunc("/devices/{id}/effect", BasicAuth(EffectGetHandler, auth)).Methods("GET")
+	r.HandleFunc("/devices/{id}/effect", BasicAuth(EffectPutHandler, auth)).Methods("PUT")
+	r.HandleFunc("/devices/{id}/active", BasicAuth(ActivePutHandler, auth)).Methods("PUT")
+	r.HandleFunc("/devices/{id}/available", BasicAuth(EffectListHandler, auth))
 
 	files := activation.Files(false)
 	var l net.Listener
