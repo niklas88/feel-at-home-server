@@ -1,5 +1,7 @@
 {
 	"listenaddress" : ":8080",
+	"username" : "USERNAME",
+	"password" : "PASSWORD",
 	"devices":[
 
 		{
